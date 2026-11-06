@@ -1,0 +1,4 @@
+node_modules/
+blacktides.db
+.env
+*.log

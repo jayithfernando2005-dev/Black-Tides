@@ -1,0 +1,16 @@
+{
+  "name": "black-tides",
+  "version": "1.0.0",
+  "description": "Black Tides - a 2D naval shooter that uses the Fish Game API (CIS045-3 Assignment 1)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Black Tides. -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Black Tides</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2215%22 fill=%22%2307171d%22 stroke=%22%236fe0a8%22 stroke-width=%222%22/%3E%3Cpath d=%22M24 16 18 11H9l-2 5 2 5h9z%22 fill=%22%23ece4cf%22/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=IM+Fell+English:ital@1&family=Cinzel:wght@600;700;900&family=Lilita+One&family=Share+Tech+Mono&family=Staatliches&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading screen: the key art comes to life while the game loads (see js/splash.js). -->
+  <div class="splash" id="splash" role="status" aria-label="Loading Black Tides">
+    <canvas id="splash-art" aria-hidden="true"></canvas>
+    <div class="splash-shade" aria-hidden="true"></div>
+    <div class="splash-load">
+      <div class="splash-progress">
+        <div class="splash-bar"><div class="splash-bar-fill" id="splash-bar-fill"></div></div>
+        <span class="splash-percent" id="splash-percent">0%</span>
+      </div>
+      <p class="splash-continue" id="splash-continue" hidden>Press any key to continue</p>
+    </div>
+    <div class="splash-status">
+      <svg class="splash-wheel" viewBox="0 0 48 48" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <circle cx="24" cy="24" r="13"/><circle cx="24" cy="24" r="4"/>
+          <path d="M24 2v9M24 37v9M2 24h9M37 24h9M8.4 8.4l6.4 6.4M33.2 33.2l6.4 6.4M8.4 39.6l6.4-6.4M33.2 14.8l6.4-6.4"/>
+        </g>
+      </svg>
+      <div><span class="splash-loading">Loading<span class="dots"></span></span><span class="splash-step" id="splash-status">Starting</span></div>
+    </div>
+  </div>
+
+  <!-- Living background of the main menu (js/menuScene.js). -->
+  <canvas class="scene-bg" id="menu-bg" aria-hidden="true"></canvas>
+  <!-- Living underwater scene behind the Campaign Map (js/mapScene.js). -->
+  <canvas class="scene-bg" id="map-bg" aria-hidden="true"></canvas>
+
+  <!-- The header shown on every screen except the menu, log in and the battle. -->
+  <header class="brand" id="brand">
+    <button type="button" class="brand-name" data-nav="menu" aria-label="Black Tides, go to the main menu">BLACK TIDES</button>
+    <span class="brand-captain" id="brand-captain">Guest</span>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ========== LOG IN ========== -->
+    <!-- The living splash scene stays behind this page (see js/splash.js). -->
+    <section class="screen auth" id="screen-login" hidden>
+      <form class="auth-card" id="login-form" novalidate>
+        <span class="auth-deco" aria-hidden="true">
+          <img class="deco-lantern left" src="img/login-lantern.png" alt=""><img class="deco-lantern right" src="img/login-lantern.png" alt="">
+          <img class="deco-gears left" src="img/login-gears-left.png" alt=""><img class="deco-gears right" src="img/login-gears-right.png" alt="">
+          <img class="deco-telescope" src="img/login-telescope.png" alt=""><img class="deco-anchor" src="img/login-anchor.png" alt="">
+        </span>
+        <div class="auth-head">
+          <p class="auth-kicker">Captain's quarters</p>
+          <h1 class="auth-title">Log in</h1>
+          <p class="auth-sub">Sign in to take command of your ship.</p>
+        </div>
+        <div class="field">
+          <label for="login-username">Username</label>
+          <div class="input-wrap"><svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.3-8 5.2V21h16v-1.8c0-2.9-3.6-5.2-8-5.2Z" fill="currentColor"/></svg><input id="login-username" name="username" autocomplete="username" placeholder="Your captain name" required></div>
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <div class="input-wrap"><svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8c0-.8.7-1.5 1.5-1.5H7Zm2 0h6V7a3 3 0 0 0-6 0v3Z" fill="currentColor"/></svg><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required><button type="button" class="reveal" data-reveal="login-password" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.7 9.4 1.5 12c1.2 2.6 5 7 10.5 7s9.3-4.4 10.5-7C21.3 9.4 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-2.2a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z" fill="currentColor"/></svg></button></div>
+        </div>
+        <label class="check"><input type="checkbox" id="login-remember"> Stay logged in on this device</label>
+        <p class="error" id="login-message" role="alert" hidden></p>
+        <button class="go big-go" type="submit"><span>Log in</span><img class="btn-art" src="img/login-cannon.png" alt=""></button>
+        <div class="divider"><span>Or</span></div>
+        <div class="row split">
+          <button type="button" class="ghost" data-nav="register"><img class="btn-icon" src="img/login-scroll.png" alt="">Create an account</button>
+          <button type="button" class="ghost" id="guest-button">Play as guest<img class="btn-icon" src="img/login-compass.png" alt=""></button>
+        </div>
+        <p class="small center">Guests can play, but their scores are not saved.</p>
+      </form>
+    </section>
+
+    <!-- ========== REGISTER ========== -->
+    <section class="screen auth" id="screen-register" hidden>
+      <form class="auth-card" id="register-form" novalidate>
+        <span class="auth-deco" aria-hidden="true">
+          <img class="deco-lantern left" src="img/login-lantern.png" alt=""><img class="deco-lantern right" src="img/login-lantern.png" alt="">
+          <img class="deco-gears left" src="img/login-gears-left.png" alt=""><img class="deco-gears right" src="img/login-gears-right.png" alt="">
+          <img class="deco-telescope" src="img/login-telescope.png" alt=""><img class="deco-anchor" src="img/login-anchor.png" alt="">
+        </span>
+        <div class="auth-head">
+          <p class="auth-kicker">New recruit</p>
+          <h1 class="auth-title">Enlist as captain</h1>
+          <p class="auth-sub">Create an account to save your scores, gold and badges.</p>
+        </div>
+        <div class="field">
+          <label for="register-username">Username</label>
+          <div class="input-wrap"><svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.3-8 5.2V21h16v-1.8c0-2.9-3.6-5.2-8-5.2Z" fill="currentColor"/></svg><input id="register-username" autocomplete="username" placeholder="Choose a captain name" required></div>
+          <small class="hint" id="hint-username">3 to 20 letters, numbers or _</small>
+        </div>
+        <div class="field">
+          <label for="register-password">Password</label>
+          <div class="input-wrap"><svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8c0-.8.7-1.5 1.5-1.5H7Zm2 0h6V7a3 3 0 0 0-6 0v3Z" fill="currentColor"/></svg><input id="register-password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required><button type="button" class="reveal" data-reveal="register-password" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.7 9.4 1.5 12c1.2 2.6 5 7 10.5 7s9.3-4.4 10.5-7C21.3 9.4 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-2.2a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z" fill="currentColor"/></svg></button></div>
+          <div class="strength" aria-hidden="true"><i id="strength-bar"></i></div>
+          <small class="hint" id="hint-password">At least 8 characters</small>
+        </div>
+        <div class="field">
+          <label for="register-confirm">Confirm password</label>
+          <div class="input-wrap"><svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-13C4.7 21 4 20.3 4 19.5v-8c0-.8.7-1.5 1.5-1.5H7Zm2 0h6V7a3 3 0 0 0-6 0v3Z" fill="currentColor"/></svg><input id="register-confirm" type="password" autocomplete="new-password" placeholder="Type it again" required><button type="button" class="reveal" data-reveal="register-confirm" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.7 9.4 1.5 12c1.2 2.6 5 7 10.5 7s9.3-4.4 10.5-7C21.3 9.4 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-2.2a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z" fill="currentColor"/></svg></button></div>
+          <small class="hint" id="hint-confirm">Both passwords must match</small>
+        </div>
+        <label class="check"><input type="checkbox" id="register-remember"> Stay logged in on this device</label>
+        <p class="error" id="register-message" role="alert" hidden></p>
+        <button class="go big-go" type="submit"><span>Create account</span><img class="btn-art" src="img/login-cannon.png" alt=""></button>
+        <p class="small center">Already a captain? <button type="button" class="link" data-nav="login">Log in</button></p>
+      </form>
+    </section>
+
+    <!-- ========== MAIN MENU ========== -->
+    <!-- The living harbour battle behind it is drawn by js/menuScene.js on #menu-bg. -->
+    <section class="screen menu" id="screen-menu" hidden>
+      <div class="menu-top">
+        <div class="captain-badge">
+          <span class="captain-emblem" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a2.5 2.5 0 0 1 1 4.8V9h3v2h-3v8.9c2.6-.4 4.6-2.2 5.3-4.6L16 16l3.5-4 2.5 5-1.9-.6C19.1 20 15.9 22.5 12 22.5S4.9 20 3.9 16.4L2 17l2.5-5L8 16l-2.3-.7c.7 2.4 2.7 4.2 5.3 4.6V11H8V9h3V6.8A2.5 2.5 0 0 1 12 2Zm0 1.6a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z" fill="currentColor"/></svg></span>
+          <div><span class="label">Captain</span><b id="menu-captain">Guest</b></div>
+        </div>
+        <div class="gold-badge" title="Gold">
+          <span class="coin" aria-hidden="true"></span><b id="menu-gold">0</b><span class="label">gold</span>
+        </div>
+      </div>
+      <div class="menu-logo">
+        <h1 class="menu-title"><img src="img/logo.png" alt="Black Tides" width="970" height="192"></h1>
+      </div>
+      <nav class="menu-buttons" aria-label="Main menu">
+        <button type="button" class="pill pill-main" data-nav="map"><span class="pill-face">Set sail</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        <div class="pill-grid">
+          <button type="button" class="pill" data-nav="shipyard"><span class="pill-face">Shipyard</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill" data-nav="leaderboard"><span class="pill-face">Leaderboard</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill" data-nav="profile"><span class="pill-face">Captain profile</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill" data-nav="achievements"><span class="pill-face">Achievements</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill" data-nav="howto"><span class="pill-face">How to play</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill" data-nav="settings"><span class="pill-face">Settings</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        </div>
+        <button type="button" class="pill pill-small" id="menu-logout"><span class="pill-face">Log out</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        <button type="button" class="pill pill-small" id="menu-login" hidden><span class="pill-face">Log in</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        <p class="menu-note" id="menu-guest-note" hidden>Playing as a guest: gold and upgrades last until you close the browser, and scores are not saved.</p>
+      </nav>
+    </section>
+
+    <!-- ========== CAMPAIGN MAP ========== -->
+    <!-- Nine stages on a parchment map over a living underwater scene.
+         Stages are drawn by js/campaign.js from GET /api/campaign. -->
+    <section class="screen board-screen map-screen" id="screen-map" hidden>
+      <div class="board-frame map-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <div class="ornate-header">
+          <h1 class="gold-plate">Naval Campaign Map</h1>
+          <button type="button" class="plaque-button header-plaque ornate-menu" data-nav="menu">Main menu</button>
+        </div>
+
+        <div class="parchment-map" id="campaign-map">
+          <img class="map-art" src="img/map-parchment.jpg" alt="">
+          <img class="map-whirl" src="img/map-whirl.png" alt="">
+          <svg class="map-routes" id="map-routes" viewBox="0 0 770 486" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="map-nodes" id="map-nodes"></div>
+          <img class="map-ship" id="map-ship" src="img/map-ship.png" alt="">
+
+          <div class="map-panel" id="map-legend" hidden>
+            <h2>Map legend</h2>
+            <ul class="legend-list"><li><span class="legend-node won"></span>Won stage (green tick)</li><li><span class="legend-node current"></span>Current target - play it to unlock the next</li><li><span class="legend-node locked"></span>Locked stage</li></ul>
+            <p>Each stage is a battle with a goal: win the number of waves shown. Winning a stage unlocks the next one and pays gold - more the first time.</p>
+            <p>Twists: <b>Fog</b> hides raiders far from you, <b>Storm</b> pushes your ship, <b>Flagship</b> waves bring the boss.</p>
+          </div>
+          <div class="map-panel" id="map-progress" hidden>
+            <h2>Campaign progress</h2>
+            <ol class="progress-list" id="map-progress-list"></ol>
+          </div>
+        </div>
+
+        <p class="map-orders" id="map-orders" role="status"></p>
+        <div class="map-actions">
+          <button type="button" class="plaque-button action-plaque" id="map-legend-button">Map legend</button>
+          <button type="button" class="plaque-button action-plaque save-plaque map-sail" id="map-sail" data-nav="game">Set sail</button>
+          <button type="button" class="plaque-button action-plaque" id="map-progress-button">Campaign progress</button>
+        </div>
+        <div class="map-footer">
+          <span id="map-count">Campaign progress</span>
+          <button type="button" class="plaque-button header-plaque" id="endless-button" data-nav="game">Endless voyage</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== HOW TO PLAY ========== -->
+    <!-- The same riveted frame as the other screens, over the living harbour scene. -->
+    <section class="screen board-screen howto-screen" id="screen-howto" hidden>
+      <div class="board-frame howto-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="deco-wheel" aria-hidden="true"><svg class="wheel-art deco-wheel-art" viewBox="0 0 200 200" aria-hidden="true">
+              <defs>
+                <linearGradient id="wheelWood2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a30"/><stop offset=".5" stop-color="#5e3a1c"/><stop offset="1" stop-color="#3e2510"/></linearGradient>
+                <linearGradient id="wheelBrass2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc94"/><stop offset=".5" stop-color="#b3802c"/><stop offset="1" stop-color="#6b4512"/></linearGradient>
+              </defs>
+              <g stroke="#2a1a0c" stroke-width="2">
+                <g fill="url(#wheelWood2)">
+                  <rect x="94" y="2" width="12" height="40" rx="6"/><rect x="94" y="158" width="12" height="40" rx="6"/>
+                  <rect x="2" y="94" width="40" height="12" rx="6"/><rect x="158" y="94" width="40" height="12" rx="6"/>
+                  <rect x="94" y="2" width="12" height="40" rx="6" transform="rotate(45 100 100)"/><rect x="94" y="158" width="12" height="40" rx="6" transform="rotate(45 100 100)"/>
+                  <rect x="2" y="94" width="40" height="12" rx="6" transform="rotate(45 100 100)"/><rect x="158" y="94" width="40" height="12" rx="6" transform="rotate(45 100 100)"/>
+                </g>
+                <circle cx="100" cy="100" r="62" fill="none" stroke="url(#wheelWood2)" stroke-width="16"/>
+                <circle cx="100" cy="100" r="62" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="54" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="22" fill="url(#wheelBrass2)"/>
+                <circle cx="100" cy="100" r="9" fill="#3b2410"/>
+              </g>
+            </svg></span>
+
+        <div class="ornate-header">
+          <h1 class="gold-plate">How to Play</h1>
+          <button type="button" class="plaque-button header-plaque ornate-menu" data-nav="menu">Main menu</button>
+        </div>
+
+        <div class="howto-cards">
+          <section class="howto-card">
+            <h2 class="card-tab">Controls</h2>
+            <dl class="control-list">
+              <dt><kbd class="keycap">W</kbd><kbd class="keycap">A</kbd><kbd class="keycap">S</kbd><kbd class="keycap">D</kbd><span class="arrow" aria-hidden="true">➜</span></dt><dd>Steer the ship (or the arrow keys)</dd>
+              <dt><kbd class="keycap wide">Mouse</kbd></dt><dd>Aim. Hold the left button to fire</dd>
+              <dt><kbd class="keycap">R</kbd></dt><dd>Open the sonar to reload</dd>
+              <dt><kbd class="keycap">P</kbd><kbd class="keycap wide">Esc</kbd></dt><dd>Pause. Esc also closes the sonar</dd>
+              <dt><kbd class="keycap wide">Enter</kbd><kbd class="keycap">M</kbd></dt><dd>After a battle: play again, or menu</dd>
+            </dl>
+          </section>
+
+          <section class="howto-card">
+            <h2 class="card-tab">The Sonar Reload</h2>
+            <img class="card-art art-top" src="img/howto-cannon.png" alt="">
+            <ol class="howto-steps">
+              <li>Every shot uses one cannonball. When you run low, press <kbd class="keycap">R</kbd>.</li>
+              <li>The sonar shows a picture from the <strong>Fish API</strong>. <strong>Count the fish</strong> to reload.</li>
+              <li>The battle does not stop while you count.</li>
+              <li>A wrong count <strong>jams</strong> the cannons for a few seconds.</li>
+              <li>Counting the <strong>chests</strong> is a gamble: right pays 25 gold, wrong costs 10 hull.</li>
+            </ol>
+            <img class="card-art art-bottom" src="img/howto-fishchest.png" alt="">
+          </section>
+
+          <section class="howto-card">
+            <h2 class="card-tab">Waves</h2>
+            <img class="card-art art-top" src="img/howto-fishflag.png" alt="">
+            <ul class="howto-steps bullets">
+              <li>Each wave brings more raiders. After a wave you repair 20 hull and visit the Shipyard.</li>
+              <li>Every <strong>5th wave</strong> the raider <strong>flagship</strong> attacks.</li>
+              <li>From wave 6, <strong>storms</strong> bring rain and a wind that pushes your ship.</li>
+              <li>Sail over <strong>crates</strong> for a Shield, Rapid fire or Repair.</li>
+            </ul>
+            <img class="card-art art-bottom small" src="img/howto-crates.png" alt="">
+          </section>
+
+          <section class="howto-card">
+            <h2 class="card-tab">Points and Gold</h2>
+            <img class="card-art art-top small" src="img/howto-coins.png" alt="">
+            <dl class="reward-list">
+              <dt>Raider sunk</dt><dd><span class="reward pts">100 points</span><span class="reward gold">10 gold</span></dd>
+              <dt>Flagship sunk</dt><dd><span class="reward pts">600 points</span><span class="reward gold">60 gold</span></dd>
+              <dt>Correct fish count</dt><dd><span class="reward pts">50 points</span></dd>
+              <dt>Correct chest count</dt><dd><span class="reward gold">25 gold</span></dd>
+              <dt>Wrong chest count</dt><dd><span class="reward loss">&minus;10 hull</span></dd>
+            </dl>
+          </section>
+        </div>
+
+        <p class="music-credits">Music: "The Buccaneer's Haul" by Shane Ivers – silvermansound.com · "Pirates!" by Eric Matyas – Soundimage.org (CC-BY 4.0)</p>
+        <div class="frame-actions">
+          <button type="button" class="plaque-button action-plaque save-plaque" data-nav="map">Set sail</button>
+          <button type="button" class="plaque-button action-plaque" data-nav="menu">Return</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SHIPYARD ========== -->
+    <!-- The same riveted frame as the other screens, over the living harbour scene.
+         The cards are drawn by js/shipyard.js. -->
+    <section class="screen board-screen yard-screen" id="screen-shipyard" hidden>
+      <div class="board-frame yard-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+
+        <div class="frame-header">
+          <h1 class="engraved">Shipyard</h1>
+          <div class="gold-plaque" aria-label="Gold"><span>Gold</span><b id="shipyard-gold">0</b><span class="coin-stack" aria-hidden="true"><i></i><i></i><i></i></span></div>
+        </div>
+
+        <p class="scroll-banner">Spend the gold you earn in battle. Upgrades are kept for every battle.</p>
+
+        <div class="yard-cards" id="shipyard-list"></div>
+        <p class="yard-status" id="shipyard-message" role="status"></p>
+
+        <div class="frame-actions">
+          <button type="button" class="plaque-button action-plaque save-plaque" data-nav="map">Set sail</button>
+          <button type="button" class="plaque-button action-plaque" data-nav="menu">Main menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== LEADERBOARD ========== -->
+    <!-- A riveted battle board over the living harbour scene (js/menuScene.js).
+         Rows are drawn by js/leaderboardView.js. -->
+    <section class="screen board-screen" id="screen-leaderboard" hidden>
+      <div class="board-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+
+        <div class="board-banner"><h1>The Sea Commanders</h1></div>
+
+        <div class="board-tabs" role="tablist" aria-label="Time period">
+          <button type="button" role="tab" aria-selected="true" data-period="all">All time</button>
+          <button type="button" role="tab" aria-selected="false" data-period="week">This week</button>
+        </div>
+
+        <div class="board-table" role="table" aria-label="Top 10 captains">
+          <div class="board-head" role="row">
+            <span role="columnheader">Rank</span><span role="columnheader">Captain</span>
+            <span role="columnheader">Achievement</span><span role="columnheader">Score</span>
+          </div>
+          <div class="board-rows" id="leaderboard-body" role="rowgroup"></div>
+          <p class="board-empty" id="leaderboard-empty" hidden>No battles saved yet. Be the first captain on the board.</p>
+        </div>
+
+        <button type="button" class="plaque-button" data-nav="menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>
+          Main menu
+        </button>
+      </div>
+      <p class="board-note">Your own row glows gold. Only logged-in captains' scores are saved.</p>
+    </section>
+
+    <!-- ========== PROFILE ========== -->
+    <!-- The same riveted frame as the leaderboard, over the living harbour scene. -->
+    <section class="screen board-screen profile-screen" id="screen-profile" hidden>
+      <div class="board-frame profile-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+
+        <div class="frame-header">
+          <h1 class="engraved">Captain Profile</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="menu">Main menu</button>
+        </div>
+
+        <div class="guest-plate" id="profile-guest" hidden>
+          <p>Guests do not have a profile. Log in to keep your record, gold and medals.</p>
+          <button type="button" class="plaque-button header-plaque" data-nav="login">Log in</button>
+        </div>
+
+        <div class="profile-layout" id="profile-body">
+          <aside class="captain-card">
+            <button type="button" class="porthole" id="profile-porthole" aria-label="Change portrait"><span class="porthole-glass" id="profile-portrait"></span><span class="porthole-edit" aria-hidden="true">✎</span></button>
+            <button type="button" class="plaque-button header-plaque change-portrait" id="change-portrait">Change portrait</button>
+            <h2 class="captain-title" id="profile-name">-</h2>
+            <p class="captain-since" id="profile-since">Member since -</p>
+            <dl class="captain-facts">
+              <dt>Rank</dt><dd><span class="rank-tag" id="profile-rank">-</span></dd>
+              <dt>Gold</dt><dd><span class="coin-stack" aria-hidden="true"><i></i><i></i><i></i></span><b class="gold-amount" id="profile-gold">0</b></dd>
+            </dl>
+          </aside>
+          <div class="profile-main">
+            <div class="stat-plaques">
+            <div class="stat-plaque"><span class="stat-label">Battles played</span><span class="stat-window"><b id="stat-games">0</b></span></div>
+            <div class="stat-plaque"><span class="stat-label">Best wave</span><span class="stat-window"><b id="stat-wave">0</b></span></div>
+            <div class="stat-plaque"><span class="stat-label">Best score</span><span class="stat-window"><b id="stat-score">0</b></span></div>
+            <div class="stat-plaque"><span class="stat-label">Ships sunk</span><span class="stat-window"><b id="stat-sunk">0</b></span></div>
+            <div class="stat-plaque"><span class="stat-label">Puzzles solved</span><span class="stat-window"><b id="stat-solved">0</b></span></div>
+            <div class="stat-plaque"><span class="stat-label">Reload accuracy</span><span class="stat-window"><b id="stat-accuracy">0</b></span></div>
+            </div>
+            <div class="medal-panel">
+              <div class="medal-head"><h3>Achievements</h3><span id="profile-badge-count"></span></div>
+              <div class="medal-grid" id="profile-badges"></div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="plaque-button" data-nav="achievements">View all achievements</button>
+
+        <!-- Change portrait window (js/portraits.js) -->
+        <div class="avatar-picker" id="avatar-picker" role="dialog" aria-modal="true" aria-labelledby="avatar-title" hidden>
+          <div class="avatar-window">
+            <h2 id="avatar-title">Change portrait</h2>
+            <div class="avatar-layout">
+              <div class="avatar-side">
+                <div class="porthole small"><span class="porthole-glass" id="avatar-preview"></span></div>
+                <label class="plaque-button header-plaque upload-plaque" for="avatar-file">Upload a picture</label>
+                <input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
+                <button type="button" class="link" id="avatar-reset">Use my default portrait</button>
+              </div>
+              <div>
+                <p class="avatar-hint">Pick a pirate, or upload your own picture (it is cropped to a square and made small).</p>
+                <div class="avatar-grid" id="avatar-grid"></div>
+              </div>
+            </div>
+            <p class="avatar-message" id="avatar-message" role="status"></p>
+            <div class="row avatar-actions">
+              <button type="button" class="plaque-button header-plaque save-plaque" id="avatar-save">Save</button>
+              <button type="button" class="plaque-button header-plaque" id="avatar-cancel">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ACHIEVEMENTS ========== -->
+    <!-- The same riveted frame as the other screens, over the living harbour scene.
+         The cards are drawn by js/achievementsView.js. -->
+    <section class="screen board-screen ach-screen" id="screen-achievements" hidden>
+      <div class="board-frame ach-frame">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+
+        <div class="frame-header">
+          <h1 class="engraved">Achievements</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="menu">Main menu</button>
+        </div>
+
+        <div class="ach-progress" id="achievements-progress">
+          <span id="achievements-count">0 of 12 unlocked</span>
+          <div class="ach-progress-bar" aria-hidden="true"><i id="achievements-fill"></i></div>
+        </div>
+
+        <div class="guest-plate" id="achievements-guest" hidden>
+          <p>Log in to earn achievements. They are saved with your captain account.</p>
+          <button type="button" class="plaque-button header-plaque" data-nav="login">Log in</button>
+        </div>
+
+        <div class="ach-grid" id="achievements-grid"></div>
+
+        <div class="frame-actions">
+          <button type="button" class="plaque-button action-plaque" data-nav="profile">Captain profile</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SETTINGS ========== -->
+    <!-- The same riveted frame as the leaderboard and profile, over the living harbour scene. -->
+    <section class="screen board-screen settings-screen" id="screen-settings" hidden>
+      <form class="board-frame settings-frame" id="settings-form">
+        <span class="lantern lantern-left"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="lantern lantern-right"><svg viewBox="0 0 40 80" aria-hidden="true"><path d="M20 0v10" stroke="#3a332c" stroke-width="3"/><circle cx="20" cy="12" r="4" fill="none" stroke="#6b5a44" stroke-width="2.5"/><path d="M9 20h22l-3 6H12Z" fill="#3b3128"/><rect x="11" y="26" width="18" height="34" rx="2" fill="#ffcf73" class="glass"/><path d="M11 26h18v34H11Z" fill="none" stroke="#3b3128" stroke-width="3"/><path d="M20 26v34M11 43h18" stroke="#3b3128" stroke-width="1.5"/><path d="M8 60h24l-3 7H11Z" fill="#3b3128"/></svg></span>
+        <span class="frame-anchor anchor-left"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+        <span class="frame-anchor anchor-right"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M32 14v42M22 22h20M10 40c2 11 11 17 22 17s20-6 22-17l-6 3M10 40l6 3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>
+
+        <div class="frame-header">
+          <h1 class="engraved">Settings</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="menu">Main menu</button>
+        </div>
+
+        <div class="settings-board">
+          <fieldset class="plank-panel sound-panel">
+            <legend class="ribbon-label">Sound</legend>
+            <div class="plank-row"><label for="set-sfx">Sound effects volume</label><span class="brass-slider"><input id="set-sfx" type="range" min="0" max="100"><output id="set-sfx-value"></output></span></div>
+            <div class="plank-row"><label for="set-music">Music volume</label><span class="brass-slider"><input id="set-music" type="range" min="0" max="100"><output id="set-music-value"></output></span></div>
+            <div class="plank-row"><label for="set-ambience">Sea ambience volume</label><span class="brass-slider"><input id="set-ambience" type="range" min="0" max="100"><output id="set-ambience-value"></output></span></div>
+            <div class="plank-row"><label for="set-mute">Mute all sound</label><input class="iron-check" id="set-mute" type="checkbox"></div>
+          </fieldset>
+
+          <fieldset class="plank-panel play-panel">
+            <legend class="ribbon-label">Play</legend>
+            <div class="plank-row"><label for="set-shake">Screen shake when hit</label><input class="iron-check" id="set-shake" type="checkbox"></div>
+            <div class="plank-row keys-row">
+              <span class="keys-label" id="keys-label">Steering keys</span>
+              <!-- The real value lives in this select (screens.js reads it); the ship's wheel is a nicer way to change it. -->
+              <select id="set-keys" class="sr-only" tabindex="-1" aria-hidden="true"><option value="wasd">W A S D</option><option value="arrows">Arrow keys</option></select>
+              <div class="helm" id="helm">
+                <svg class="wheel-art" viewBox="0 0 200 200" aria-hidden="true">
+              <defs>
+                <linearGradient id="wheelWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a30"/><stop offset=".5" stop-color="#5e3a1c"/><stop offset="1" stop-color="#3e2510"/></linearGradient>
+                <linearGradient id="wheelBrass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc94"/><stop offset=".5" stop-color="#b3802c"/><stop offset="1" stop-color="#6b4512"/></linearGradient>
+              </defs>
+              <g stroke="#2a1a0c" stroke-width="2">
+                <g fill="url(#wheelWood)">
+                  <rect x="94" y="2" width="12" height="40" rx="6"/><rect x="94" y="158" width="12" height="40" rx="6"/>
+                  <rect x="2" y="94" width="40" height="12" rx="6"/><rect x="158" y="94" width="40" height="12" rx="6"/>
+                  <rect x="94" y="2" width="12" height="40" rx="6" transform="rotate(45 100 100)"/><rect x="94" y="158" width="12" height="40" rx="6" transform="rotate(45 100 100)"/>
+                  <rect x="2" y="94" width="40" height="12" rx="6" transform="rotate(45 100 100)"/><rect x="158" y="94" width="40" height="12" rx="6" transform="rotate(45 100 100)"/>
+                </g>
+                <circle cx="100" cy="100" r="62" fill="none" stroke="url(#wheelWood)" stroke-width="16"/>
+                <circle cx="100" cy="100" r="62" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="54" fill="none" stroke="#2a1a0c" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="22" fill="url(#wheelBrass)"/>
+                <circle cx="100" cy="100" r="9" fill="#3b2410"/>
+              </g>
+            </svg>
+                <button type="button" class="helm-button" id="helm-button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="keys-label helm-button"><span id="helm-value">WASD</span><i aria-hidden="true"></i></button>
+                <ul class="helm-scroll" id="helm-list" role="listbox" aria-labelledby="keys-label" hidden>
+                  <li role="option" data-value="wasd" tabindex="-1"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></li>
+                  <li role="option" data-value="arrows" tabindex="-1">Arrow keys</li>
+                </ul>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="parchment account-panel">
+            <legend class="ribbon-label iron">Account</legend>
+            <div class="parchment-row"><label for="set-stay">Stay logged in on this device<small id="set-stay-note"></small></label><input class="iron-check" id="set-stay" type="checkbox"></div>
+            <p class="parchment-note">Sound and play settings are saved in a cookie on this device. The login cookie is separate, and page scripts cannot read it.</p>
+            <p class="parchment-status" id="settings-message" role="status"></p>
+          </fieldset>
+        </div>
+
+        <div class="frame-actions">
+          <button type="submit" class="plaque-button action-plaque save-plaque">Save settings</button>
+          <button type="button" class="plaque-button action-plaque" id="settings-reset">Reset to defaults</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========== BATTLE ========== -->
+    <section class="screen game" id="screen-game" hidden>
+      <h1 class="sr-only">Battle</h1>
+      <div class="hud" aria-label="Ship status">
+        <div class="stat"><span class="label">Captain</span><b id="hud-captain">Guest</b></div>
+        <div class="gauge" id="hud-hull"><span class="label">Hull</span><div class="track"><div class="fill" id="hud-hull-fill"></div></div><span class="num" id="hud-hull-number">100</span></div>
+        <div class="gauge" id="hud-ammo"><span class="label">Shots</span><div class="pips" id="hud-pips"></div></div>
+        <div class="stat push"><span class="label">Wave</span><b id="hud-wave">1</b><span class="chip calm" id="hud-storm" hidden>Storm</span></div>
+        <div class="stat"><span class="label">Gold</span><b class="g" id="hud-gold">0</b><span class="coin-stack hud-coins" aria-hidden="true"><i></i><i></i><i></i></span></div>
+        <div class="stat"><span class="label">Score</span><b id="hud-score">0</b><span class="hud-star" aria-hidden="true">★</span></div>
+      </div>
+
+      <div class="stage">
+        <canvas id="sea" width="960" height="600" tabindex="0" aria-label="Sea battle. Steer with W A S D, aim with the mouse, click to fire, R for sonar, P to pause."></canvas>
+        <span class="power-tag" id="power-tag" hidden></span>
+        <button type="button" class="scan sonar-button" id="sonar-button" disabled><span class="lever-handle" aria-hidden="true"></span><span class="lever-label">Sonar reload (R)</span></button>
+
+        <!-- Sonar reload: the battle keeps running behind it. -->
+        <form class="panel high" id="sonar" hidden>
+          <div class="head"><h2>Sonar reload</h2><span class="chip">Battle is still running</span></div>
+          <div class="sonar-grid">
+            <div class="sonar-screen"><img id="sonar-picture" alt=""></div>
+            <div class="fields">
+              <div class="field">
+                <label for="fish-count">Fish count</label>
+                <input id="fish-count" type="number" inputmode="numeric" min="0" max="99" autocomplete="off">
+                <small>Correct count reloads the cannons</small>
+              </div>
+              <div class="field">
+                <label for="chest-count">Chest count (optional)</label>
+                <input id="chest-count" type="number" inputmode="numeric" min="0" max="99" autocomplete="off">
+                <small>Right pays 25 gold. Wrong costs 10 hull.</small>
+              </div>
+              <div class="row">
+                <button class="go" id="reload-button" type="submit">Reload</button>
+                <button id="sonar-close" type="button">Close (Esc)</button>
+              </div>
+              <div class="jam" id="sonar-message" role="status"></div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Pause -->
+        <div class="panel" id="pause-panel" hidden>
+          <h2>Paused</h2>
+          <p>The raiders are waiting. Press P or Esc to carry on.</p>
+          <div class="row">
+            <button type="button" class="go" id="resume-button">Resume</button>
+            <button type="button" id="quit-button">Quit to menu</button>
+          </div>
+          <p class="small">Quitting ends this battle without saving its score. Gold from cleared waves is kept.</p>
+        </div>
+
+        <!-- Shipyard between waves -->
+        <div class="panel" id="yard-panel" hidden>
+          <div class="head"><h2 id="yard-title">Wave cleared</h2><span class="gold-chip"><span class="label">Gold</span> <b id="yard-gold">0</b></span></div>
+          <p>20 hull repaired and your gold is banked. Spend it on upgrades, then sail.</p>
+          <div class="yard-cards compact" id="yard-list"></div>
+          <p class="msg" id="yard-message" role="status"></p>
+          <button type="button" class="go" id="sail-button">Sail to wave 2</button>
+        </div>
+
+        <!-- Game over -->
+        <div class="panel" id="over-panel" hidden>
+          <div class="head"><h2 id="over-title">Ship sunk</h2><span class="chip best" id="over-best" hidden>New personal best</span></div>
+          <p class="victory-line" id="over-victory" hidden></p>
+          <dl class="sum">
+            <dt>Wave reached</dt><dd id="over-wave">1</dd>
+            <dt>Ships sunk</dt><dd id="over-sunk">0</dd>
+            <dt>Flagships sunk</dt><dd id="over-bosses">0</dd>
+            <dt>Sonar puzzles solved</dt><dd id="over-solved">0</dd>
+            <dt>Gold earned</dt><dd id="over-gold">0</dd>
+            <dt>Score</dt><dd id="over-score">0</dd>
+          </dl>
+          <p class="msg good" id="over-badges" hidden></p>
+          <p class="small" id="over-note" role="status"></p>
+          <div class="row">
+            <button type="button" class="go" id="next-stage-button" hidden>Next stage</button>
+            <button type="button" class="go" id="again-button">Play again (Enter)</button>
+            <button type="button" data-nav="map">Campaign map</button>
+            <button type="button" data-nav="leaderboard">Leaderboard</button>
+            <button type="button" data-nav="menu">Main menu (M)</button>
+          </div>
+        </div>
+      </div>
+      <p class="msg" id="battle-message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
