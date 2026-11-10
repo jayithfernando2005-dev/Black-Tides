@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // settings.js - the player's settings, kept in a cookie on this device.
 // This cookie is readable by our page scripts on purpose (it holds nothing secret).
 // The login cookie (connect.sid) is different: it is httpOnly, so scripts cannot read it.
@@ -6,7 +7,9 @@ import { emit } from "./events.js";
 const COOKIE_NAME = "bt_settings";
 const ONE_YEAR = 365 * 24 * 60 * 60;          // in seconds
 
-export const DEFAULTS = { sfx: 80, music: 60, ambience: 50, mute: false, shake: true, keys: "wasd" };
+export const DEFAULTS = { sfx: 80, music: 60, ambience: 50, mute: false, shake: true, keys: "wasd", liveNews: true, weatherCity: "colombo" };
+// The places the server can read the weather for (server/weather.js has the same list).
+export const WEATHER_CITIES = ["colombo", "kandy", "galle", "jaffna", "trincomalee", "luton", "london"];
 
 // Keeps a number between 0 and 100.
 function percent(value, fallback) {
@@ -22,7 +25,9 @@ function clean(raw) {
     ambience: percent(raw.ambience, DEFAULTS.ambience),
     mute: raw.mute === true,
     shake: raw.shake !== false,
-    keys: raw.keys === "arrows" ? "arrows" : "wasd"
+    keys: raw.keys === "arrows" ? "arrows" : "wasd",
+    liveNews: raw.liveNews !== false,
+    weatherCity: WEATHER_CITIES.includes(raw.weatherCity) ? raw.weatherCity : DEFAULTS.weatherCity
   };
 }
 

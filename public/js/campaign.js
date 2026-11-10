@@ -1,8 +1,10 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaign.js - the Naval Campaign Map. Shows the nine stages on the parchment map:
 // won stages get a green tick, the next stage is the "current target", later ones are
 // locked. The server (GET /api/campaign) says how far the captain has got; this file
 // only draws the map and remembers which voyage was chosen for the next battle.
 import * as api from "./api.js";
+import { getSettings } from "./settings.js";
 
 // Where each stage sits on the parchment picture (770 x 486 pixels).
 const SPOTS = {
@@ -142,7 +144,25 @@ function drawProgressPanel() {
 }
 
 // Fetches the campaign from the server and draws the whole map.
+// The forecast line under "Endless voyage": the real weather the voyage will sail in.
+async function showForecast() {
+  const line = $("map-weather");
+  try {
+    const weather = await api.getWeather(getSettings().weatherCity);
+    const effect = weather.storm === "always" ? "storm all voyage" : weather.storm === "often" ? "storms come often" : weather.fog ? "fog on the water" : "calm seas";
+    line.replaceChildren();
+    const strong = document.createElement("b");
+    strong.textContent = weather.cityName + ": ";
+    line.append(strong, weather.label + ", " + weather.temperature + "°C");
+    line.title = "The Endless voyage sails in the real weather: " + weather.label + ", wind " + weather.wind + " km/h - " + effect;
+    line.hidden = false;
+  } catch (error) {
+    line.hidden = true;                         // no weather: the voyage simply sails in normal weather
+  }
+}
+
 export async function showMap() {
+  showForecast();
   try {
     campaign = await api.getCampaign();
   } catch (error) {

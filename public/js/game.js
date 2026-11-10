@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // game.js - the battle itself: the game loop, the player's ship, waves,
 // bosses, storms, power-ups, pausing, and the end of the battle.
 // It talks to the screens only through events (battle:start, battle:over, ...).
@@ -10,7 +11,7 @@ import { explode, foam, addShake, updateEffects, getEffects, getShake, clearEffe
 import { openSonar, closeSonar, isSonarOpen } from "./sonar.js";
 import { showShipyard } from "./shipyard.js";
 import { updateHud, resetHud } from "./hud.js";
-import { getProgress, depositGold, startStage, completeStage } from "./api.js";
+import { getProgress, depositGold, startStage, completeStage, getWeather } from "./api.js";
 import { getSettings } from "./settings.js";
 import { startAmbience, stopAmbience, unlockAudio } from "./sound.js";
 import { on, emit } from "./events.js";
@@ -81,7 +82,8 @@ async function startBattle(voyage) {
     battleGold: 0, goldEarned: 0, bankedGold: 0,
     damagedThisWave: false, untouched: false, underFire: false,
     clearTimer: 0, spawnQueue: [], spawnTimer: 0,
-    storm: false, wind: 0, shield: 0, rapid: 0, flash: 0, banner: null
+    storm: false, wind: 0, shield: 0, rapid: 0, flash: 0, banner: null,
+    weather: null                              // real weather for the Endless voyage (Open-Meteo)
   };
   say("Preparing your ship...");
   let progress = { gold: 0 };
@@ -91,6 +93,11 @@ async function startBattle(voyage) {
       run.stage = (await startStage(voyage.stage.id)).stage;
     }
     progress = await getProgress();
+    // The Endless voyage sails in the real weather of the captain's chosen city.
+    // If the weather cannot be read within 3 seconds, the battle starts in normal weather.
+    if (!voyage || voyage.mode !== "stage") {
+      run.weather = await loadWeather();
+    }
   } catch (error) {
     console.error(error);
     if (voyage && voyage.mode === "stage") {
@@ -114,6 +121,14 @@ async function startBattle(voyage) {
   startAmbience();
   say("Steer, aim with the mouse, click to fire. Press R for the sonar when you run low.");
   canvas.focus();
+}
+
+// Asks our server for the real weather (it asks Open-Meteo). Never throws.
+async function loadWeather() {
+  const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+  const weather = await Promise.race([getWeather(getSettings().weatherCity).catch(() => null), timeout]);
+  if (weather) emit("weather:loaded", weather);
+  return weather;
 }
 
 function stopBattle() {
@@ -145,11 +160,15 @@ function startWave(number) {
   run.wave = number;
   run.damagedThisWave = false;
   const stage = run.stage;
+  const weather = stage ? null : run.weather;          // real weather only on the Endless voyage
   if (stage && stage.storm === "always") run.storm = true;
   else if (stage && stage.storm === "never") run.storm = false;
+  else if (weather && weather.storm === "always") run.storm = true;          // a real thunderstorm
+  else if (weather && weather.storm === "often") run.storm = number >= 2 && number % 2 === 0;   // rain or strong wind
   else run.storm = number >= 6 && number % 2 === 0;
-  run.fog = stage ? stage.fog : false;
-  run.wind = run.storm ? (Math.random() < 0.5 ? -1 : 1) * WIND_SPEED : 0;
+  run.fog = stage ? stage.fog : weather ? weather.fog : false;
+  const windPush = weather ? weather.windPush : 1;     // a real gale pushes harder
+  run.wind = run.storm ? (Math.random() < 0.5 ? -1 : 1) * WIND_SPEED * windPush : 0;
 
   // Stage rules: which waves bring the flagship, extra raiders, tougher raiders.
   const bossWave = stage ? stage.bossWaves.includes(number) : number % 5 === 0;
@@ -181,6 +200,10 @@ function startWave(number) {
   if (stage && number === 1) {
     text = "Stage " + stage.id + " · " + stage.name + " - win " + stage.waves + " waves";
     colour = "#f3d48a";
+  }
+  if (weather && number === 1) {
+    text = "Live weather in " + weather.cityName + ": " + weather.label + ", " + weather.temperature + "°C";
+    colour = "#8fd3ff";
   }
   const title = stage ? "WAVE " + number + " / " + stage.waves : "WAVE " + number;
   run.banner = { title: title, text: text, colour: colour, time: 2.6 };
