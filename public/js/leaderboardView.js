@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // leaderboardView.js - draws the rows of the leaderboard board: rank plates, a captain
 // portrait made from the captain's name, an achievement crest with stars, and the score.
 // screens.js fetches the data; this file only turns it into HTML (looks only).
@@ -103,9 +104,13 @@ function boardRow(row, index, me) {
   captain.setAttribute("role", "cell");
   const portrait = make("span", "portrait");
   renderPortraitLater(portrait, row);                      // drawn by portraits.js (chosen or uploaded)
-  const nameBox = make("span", "captain-name");
+  // the name opens the captain's public page (#/captain/Name)
+  const nameBox = make("button", "captain-name captain-link");
+  nameBox.type = "button";
+  nameBox.dataset.nav = "captain/" + encodeURIComponent(row.username);
+  nameBox.title = "See " + row.username + "'s captain page";
   nameBox.append(make("b", "", row.username));
-  nameBox.append(make("small", "", row.games + (row.games === 1 ? " battle" : " battles")));
+  nameBox.append(make("small", "", (row.title ? row.title + " · " : "") + row.games + (row.games === 1 ? " battle" : " battles")));
   captain.append(portrait, nameBox);
   if (isMe) captain.append(make("span", "you-tag", "You"));
 

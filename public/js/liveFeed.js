@@ -18,6 +18,11 @@ function describe(item) {
     case "stage:cleared": return { icon: "🏴", text: who + " conquered Stage " + item.stage + " · " + item.stageName };
     case "score:record": return { icon: "🏆", text: who + " reached #" + item.rank + " on the leaderboard with " + Number(item.score).toLocaleString("en-GB") + " points" };
     case "flagship:sunk": return { icon: "💥", text: who + " sank " + (item.bosses > 1 ? item.bosses + " raider flagships" : "a raider flagship") };
+    case "rival:passed":
+      // only the two captains involved hear about it
+      if (item.rival === me) return { icon: "⚔", text: "Your rival " + item.username + " just beat your best score with " + Number(item.score).toLocaleString("en-GB") + "!" };
+      if (item.username === me) return { icon: "⚔", text: "You overtook your rival " + item.rival + "!" };
+      return null;
     case "daily:solved": return { icon: "🐟", text: who + " solved today's Daily Challenge in " + Number(item.seconds).toFixed(1) + " s (#" + item.rank + ")" };
     default: return null;
   }

@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // users.js - saving and finding captain accounts in the database.
 const db = require("./db");
 
@@ -20,4 +21,9 @@ function findUserById(id) {
   return db.prepare("SELECT * FROM users WHERE id = ?").get(id);
 }
 
-module.exports = { createUser, findUserByName, findUserById };
+function isAdmin(userId) {
+  const user = userId ? findUserById(userId) : null;
+  return Boolean(user && user.role === "admin");
+}
+
+module.exports = { createUser, findUserByName, findUserById, isAdmin };

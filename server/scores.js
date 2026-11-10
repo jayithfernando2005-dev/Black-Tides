@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // scores.js - saving battle results and reading records and the leaderboard.
 const db = require("./db");
 
@@ -34,6 +35,7 @@ function getLeaderboard(period, limit) {
     : "";
   return db.prepare(`
     SELECT users.username AS username,
+           users.id AS userId,
            MAX(scores.score) AS bestScore,
            MAX(scores.wave) AS bestWave,
            SUM(scores.sunk) AS sunk,

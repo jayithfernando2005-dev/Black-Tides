@@ -14,7 +14,7 @@ const { EventEmitter } = require("node:events");
 const news = new EventEmitter();
 news.setMaxListeners(500);              // one listener per open browser tab
 
-const KINDS = ["captain:joined", "stage:cleared", "score:record", "flagship:sunk", "daily:solved"];
+const KINDS = ["captain:joined", "stage:cleared", "score:record", "flagship:sunk", "daily:solved", "rival:passed"];
 let nextId = 1;
 
 // Announce something to every open game. data must contain only safe, plain values.

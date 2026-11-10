@@ -2,6 +2,7 @@
 // authRoutes.js - register, log in, log out, "who am I?" and "stay logged in".
 const express = require("express");
 const { publish } = require("./liveEvents");
+const { rankOf } = require("./ranks");
 const { createUser, findUserByName, findUserById } = require("./users");
 const { hashPassword, checkPassword } = require("./passwords");
 const requireLogin = require("./requireLogin");
@@ -96,7 +97,9 @@ router.get("/me", (req, res) => {
   res.json({
     username: req.session.username,
     memberSince: user ? user.created_at : null,
-    remember: req.session.remember === true
+    remember: req.session.remember === true,
+    admin: Boolean(user && user.role === "admin"),
+    rank: rankOf(req.session.userId).title
   });
 });
 

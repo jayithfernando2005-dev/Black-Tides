@@ -2,6 +2,8 @@
 // scoreRoutes.js - saving battle results, a captain's profile, achievements and the leaderboard.
 const express = require("express");
 const { publish } = require("./liveEvents");
+const { rankOf } = require("./ranks");
+const { rivalsPassed } = require("./captainRoutes");
 const requireLogin = require("./requireLogin");
 const { saveScore, getRecord, getLeaderboard, getRank } = require("./scores");
 const { listAchievements } = require("./achievements");
@@ -57,6 +59,13 @@ router.post("/scores", requireLogin, (req, res) => {
     publish("flagship:sunk", { username: req.session.username, bosses: result.bosses });
   }
 
+  // Live sea news for rivals whose best score was just overtaken.
+  if (personalBest) {
+    for (const rival of rivalsPassed(req.session.userId, previousBest, result.score)) {
+      publish("rival:passed", { username: req.session.username, rival: rival, score: result.score });
+    }
+  }
+
   const all = listAchievements(req.session.userId, loadProgress(req));
   const newlyUnlocked = all.filter((a) => a.unlocked && !before.includes(a.key)).map((a) => a.name);
   res.json({
@@ -85,6 +94,7 @@ router.get("/profile", requireLogin, (req, res) => {
     accuracy: accuracy,
     gold: progress.gold,
     rank: getRank(req.session.userId),
+    captainRank: rankOf(req.session.userId),
     ...avatarInfo(user)
   });
 });
@@ -97,7 +107,7 @@ router.get("/achievements", requireLogin, (req, res) => {
 // GET /api/leaderboard?period=all or ?period=week - the top 10 captains. Anyone may look.
 router.get("/leaderboard", (req, res) => {
   const period = req.query.period === "week" ? "week" : "all";
-  res.json(getLeaderboard(period, 10));
+  res.json(getLeaderboard(period, 10).map((row) => ({ ...row, title: rankOf(row.userId).title, userId: undefined })));
 });
 
 module.exports = router;

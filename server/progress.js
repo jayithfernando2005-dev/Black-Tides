@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // progress.js - a captain's gold, ship upgrades and sonar record.
 // Logged-in captains keep theirs in the database.
 // Guests keep theirs in the session, so it is lost when they leave.
@@ -30,7 +31,12 @@ function loadProgress(req) {
   if (!req.session.userId) {
     return req.session.guest || emptyProgress();
   }
-  const row = db.prepare("SELECT * FROM progress WHERE user_id = ?").get(req.session.userId);
+  return loadProgressFor(req.session.userId);
+}
+
+// Reads any captain's progress by their id (for public pages, the admin page and save files).
+function loadProgressFor(userId) {
+  const row = db.prepare("SELECT * FROM progress WHERE user_id = ?").get(userId);
   if (!row) {
     return emptyProgress();
   }
@@ -48,6 +54,10 @@ function saveProgress(req, p) {
     req.session.guest = p;
     return;
   }
+  saveProgressFor(req.session.userId, p);
+}
+
+function saveProgressFor(userId, p) {
   db.prepare(`
     INSERT INTO progress (user_id, gold, hull, power, hold, scope,
                           puzzles_tried, puzzles_solved, chests_right, streak, best_streak, campaign)
@@ -58,7 +68,7 @@ function saveProgress(req, p) {
       puzzles_tried = excluded.puzzles_tried, puzzles_solved = excluded.puzzles_solved,
       chests_right = excluded.chests_right, streak = excluded.streak,
       best_streak = excluded.best_streak, campaign = excluded.campaign
-  `).run(req.session.userId, p.gold, p.hull, p.power, p.hold, p.scope,
+  `).run(userId, p.gold, p.hull, p.power, p.hold, p.scope,
     p.puzzlesTried, p.puzzlesSolved, p.chestsRight, p.streak, p.bestStreak, p.campaign || 1);
 }
 
@@ -76,4 +86,4 @@ function publicProgress(p) {
   return { gold: p.gold, maxLevel: MAX_LEVEL, upgrades: upgrades };
 }
 
-module.exports = { UPGRADES, MAX_LEVEL, upgradeCost, loadProgress, saveProgress, publicProgress };
+module.exports = { UPGRADES, MAX_LEVEL, upgradeCost, emptyProgress, loadProgress, loadProgressFor, saveProgress, saveProgressFor, publicProgress };
