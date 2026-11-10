@@ -1,5 +1,7 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // authRoutes.js - register, log in, log out, "who am I?" and "stay logged in".
 const express = require("express");
+const { publish } = require("./liveEvents");
 const { createUser, findUserByName, findUserById } = require("./users");
 const { hashPassword, checkPassword } = require("./passwords");
 const requireLogin = require("./requireLogin");
@@ -47,6 +49,7 @@ router.post("/register", async (req, res) => {
     const { hash, salt } = await hashPassword(password);
     const id = createUser(username, hash, salt);
     await startSession(req, { id: id, username: username }, req.body.remember);
+    publish("captain:joined", { username: username });        // live sea news
     res.json({ username: username });
   } catch (error) {
     console.error(error);

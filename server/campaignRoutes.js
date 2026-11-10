@@ -1,6 +1,8 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaignRoutes.js - the Naval Campaign. The server decides which stages a captain
 // may play and when a stage counts as won, so the browser cannot skip ahead.
 const express = require("express");
+const { publish } = require("./liveEvents");
 const { STAGES, SECONDS_PER_WAVE, getStage, rewardFor } = require("./campaign");
 const { loadProgress, saveProgress } = require("./progress");
 
@@ -49,6 +51,10 @@ router.post("/campaign/complete", (req, res) => {
   const reward = rewardFor(stage, firstClear);
   progress.gold += reward;
   saveProgress(req, progress);
+
+  if (firstClear) {
+    publish("stage:cleared", { username: req.session.username, stage: stage.id, stageName: stage.name });
+  }
 
   const next = getStage(id + 1);
   res.json({

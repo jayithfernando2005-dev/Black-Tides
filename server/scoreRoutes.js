@@ -1,5 +1,7 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // scoreRoutes.js - saving battle results, a captain's profile, achievements and the leaderboard.
 const express = require("express");
+const { publish } = require("./liveEvents");
 const requireLogin = require("./requireLogin");
 const { saveScore, getRecord, getLeaderboard, getRank } = require("./scores");
 const { listAchievements } = require("./achievements");
@@ -46,11 +48,20 @@ router.post("/scores", requireLogin, (req, res) => {
   // so nobody can save a score under someone else's name.
   saveScore(req.session.userId, result);
 
+  // Live sea news: a top-10 personal best, or a flagship sunk.
+  const personalBest = result.score > previousBest;
+  const rank = getRank(req.session.userId);
+  if (personalBest && result.score > 0 && rank !== null && rank <= 10) {
+    publish("score:record", { username: req.session.username, score: result.score, rank: rank });
+  } else if (result.bosses > 0) {
+    publish("flagship:sunk", { username: req.session.username, bosses: result.bosses });
+  }
+
   const all = listAchievements(req.session.userId, loadProgress(req));
   const newlyUnlocked = all.filter((a) => a.unlocked && !before.includes(a.key)).map((a) => a.name);
   res.json({
     saved: true,
-    personalBest: result.score > previousBest,
+    personalBest: personalBest,
     newAchievements: newlyUnlocked
   });
 });
