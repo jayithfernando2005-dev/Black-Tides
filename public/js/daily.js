@@ -6,6 +6,9 @@ import * as api from "./api.js";
 import { emit } from "./events.js";
 import { renderPortrait } from "./portraits.js";
 import { sounds } from "./sound.js";
+import { shareDaily } from "./shareCard.js";
+
+let lastResult = null;       // the finished result, for the share card
 
 const $ = (id) => document.getElementById(id);
 let clockTimer = null;
@@ -95,6 +98,7 @@ export function leaveDaily() {
 }
 
 function showDone(seconds, rank, wrong, chestRight) {
+  lastResult = { seconds: seconds, rank: rank, wrong: wrong, chestRight: chestRight };
   stopClock();
   show("daily-done");
   $("daily-result-time").textContent = formatSeconds(seconds);
@@ -151,4 +155,12 @@ $("daily-play").addEventListener("submit", async (event) => {
   } finally {
     $("daily-submit").disabled = false;
   }
+});
+
+// Event: "Download share card" after finishing.
+$("daily-share").addEventListener("click", async () => {
+  if (!lastResult) return;
+  $("daily-share").disabled = true;
+  await shareDaily(lastResult);
+  $("daily-share").disabled = false;
 });

@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // portraits.js - shows a captain's portrait anywhere in the game, and the window for
 // changing it. A portrait is one of: made from the name (default), one of 12 ready-made
 // pirates ("preset:0" to "preset:11"), or a picture the captain uploaded ("custom").
@@ -26,6 +27,17 @@ export function renderPortrait(element, username, avatar, version) {
   } else {
     element.innerHTML = captainPortrait(username);
   }
+}
+
+// The address of a picture of the portrait (for drawing it on a canvas, e.g. the share card).
+export function portraitSource(username, avatar, version) {
+  if (avatar === "custom") {
+    return "/api/avatar/" + encodeURIComponent(username) + "?v=" + encodeURIComponent(version || 0);
+  }
+  let seed = username;
+  if (typeof avatar === "string" && avatar.startsWith("preset:")) seed = PRESET_SEEDS[Number(avatar.slice(7))] || username;
+  const svg = captainPortrait(seed).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" ');
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
 // ---------- the "Change portrait" window ----------
