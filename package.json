@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "make-admin": "node scripts/make-admin.js"
   },
   "dependencies": {
     "express": "^5.2.1",

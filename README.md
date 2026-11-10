@@ -163,3 +163,22 @@ npm test
 Runs 26 tests with Node's built-in test runner (`node --test`), from the `tests` folder. Each test file starts the real server on a spare port with a throwaway in-memory database and a pretend Fish API and weather service, so the tests need no internet and never touch `blacktides.db`. They check accounts and password hashing, guest limits, fake pictures, that puzzle answers never reach the browser, campaign anti-cheat, the Daily Challenge rules, the live news stream, and the weather rules.
 
 `server.js` only starts the server; the routes live in `server/app.js`, so the tests can start the same app. The Fish API and weather addresses can be changed with the `FISH_API_URL` and `WEATHER_API_URL` environment variables (the tests use this).
+
+## Battle upgrades
+
+- **Combo system**: sink ships within 3 seconds of each other to build a combo. Points are multiplied (x1.5 from 3 in a row, x2 from 5, up to x3). Being hit breaks the combo. The best combo is shown at the end of the battle.
+- **New enemies**: cutters (small, fast, weak) from wave 3 and ironclads (slow, armoured, heavy double shot) from wave 5. Points and gold for each type are in `public/js/enemies.js` (`REWARDS`).
+- **The kraken**: a boss that drifts across the top of the sea, sprays fans of ink and slams tentacles where your ship is (red ripples warn you first). It appears in the last wave of Kraken's Deep (stage 6) and Galleon Graveyard (stage 9), and every 10th wave of the Endless voyage.
+- **Random sea events** (`public/js/seaEvents.js`): from wave 2, a 40% chance per wave of a whirlpool (pulls ships in, tears raiders apart), a merchant to escort (stay close for 6 s: +60 gold, +250 points) or a tentacle attack. To try one in the browser console: `blackTides.seaEvent("whirlpool")`.
+
+## Ranks, captain pages and rivals
+
+- **Ranks**: XP comes from saved records only (`server/ranks.js`): 1 XP per 20 points, 5 per ship, 50 per boss, 10 per sonar puzzle, 150 per campaign stage, 50 per Daily Challenge. Eight ranks from Deckhand to Admiral, shown on the menu, profile, leaderboard and captain pages.
+- **Public captain pages**: click a name on the leaderboard (`#/captain/Name`). `GET /api/captains/:name` returns only public facts (never gold, passwords or ids).
+- **Rivals**: mark up to 5 captains as rivals (captain page or profile). The profile compares your best score with theirs, and live sea news tells both captains when one overtakes the other.
+
+## Extras
+
+- **Share cards**: "Download share card" on the end-of-battle panel and after the Daily Challenge makes a 1200 x 630 PNG with your portrait, rank and result (drawn in the browser, nothing uploaded).
+- **Admin page (Harbour master)**: `npm run make-admin -- <username>` gives a captain the admin role (`npm run make-admin -- <username> remove` takes it away). Admins see every captain and can rename, reset progress or remove accounts. The role is checked on the server for every request; admin accounts cannot be changed from the page.
+- **Save files**: Settings → Save file → Download gives a JSON file with gold, upgrades, campaign and sonar record, signed with HMAC-SHA256. Load refuses edited files and other captains' saves (a guest's save can be loaded into a new account). Scores are never in save files.
