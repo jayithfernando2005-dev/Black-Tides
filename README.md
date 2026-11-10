@@ -130,3 +130,36 @@ Server side (`server/avatarRoutes.js`):
 - The picture is stored in the `users` table (`avatar_image`), not as a file, so nothing can be written to the server's folders.
 - `GET /api/avatar/:username` sends the picture back with the right content type and `nosniff`.
 - The profile and leaderboard include `avatar` and `avatarVersion`, so a changed picture shows straight away.
+
+## Daily Challenge
+
+One sonar picture per day, the same for every captain (menu → **Daily challenge**).
+
+- The first request of the day makes the server fetch ONE puzzle from the Fish API and store it in the `daily_puzzles` table; everyone counts that picture all day.
+- `GET /api/daily` shows today's board but never the picture, so nobody can look before their clock starts.
+- `POST /api/daily/start` starts the clock **on the server** (stored in `daily_results`), so reloading or logging in again does not restart it.
+- `POST /api/daily/answer`: a wrong fish count adds 10 s; a right count finishes. Counting the chests right too takes 5 s off. Finishing pays 30 gold, once a day.
+
+## Live sea news (Server-Sent Events)
+
+- `GET /api/live` is a long-lived Server-Sent Events stream (`server/liveEvents.js`).
+- Routes call `publish()` when something happens: a captain joins, a stage is conquered for the first time, a top-10 personal best, a flagship sunk, or the Daily Challenge solved. Every open game receives it at once.
+- The browser (`public/js/liveFeed.js`) turns each message into a `live:news` event on the game's event bus and shows a pop-up. The menu shows how many captains are online right now.
+- Pop-ups can be turned off in **Settings → Live sea news pop-ups**.
+
+## Real weather (Open-Meteo)
+
+- The **Endless voyage** sails in the real weather of a city chosen in Settings (Colombo, Kandy, Galle, Jaffna, Trincomalee, Luton or London).
+- `GET /api/weather?city=colombo` asks the free Open-Meteo API (no key needed) and keeps the answer for 10 minutes. Only the cities in the list can be asked for.
+- Thunderstorm → storm every wave; rain or strong wind → storms often; fog → fog; a strong wind pushes the ship harder.
+- If the weather cannot be read, the voyage simply sails in normal weather.
+
+## Automated tests
+
+```
+npm test
+```
+
+Runs 26 tests with Node's built-in test runner (`node --test`), from the `tests` folder. Each test file starts the real server on a spare port with a throwaway in-memory database and a pretend Fish API and weather service, so the tests need no internet and never touch `blacktides.db`. They check accounts and password hashing, guest limits, fake pictures, that puzzle answers never reach the browser, campaign anti-cheat, the Daily Challenge rules, the live news stream, and the weather rules.
+
+`server.js` only starts the server; the routes live in `server/app.js`, so the tests can start the same app. The Fish API and weather addresses can be changed with the `FISH_API_URL` and `WEATHER_API_URL` environment variables (the tests use this).
