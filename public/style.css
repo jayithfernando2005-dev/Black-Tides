@@ -49,6 +49,7 @@ body[data-screen="menu"] .brand,
 body[data-screen="login"] .brand,
 body[data-screen="register"] .brand,
 body[data-screen="game"] .brand,
+body[data-screen="daily"] .brand,
 body[data-screen="leaderboard"] .brand,
 body[data-screen="profile"] .brand,
 body[data-screen="settings"] .brand,
@@ -440,12 +441,14 @@ body[data-screen="settings"] .scene-bg,
 body[data-screen="shipyard"] .scene-bg,
 body[data-screen="howto"] .scene-bg,
 body[data-screen="achievements"] .scene-bg,
+body[data-screen="daily"] .scene-bg,
 body[data-screen="leaderboard"] .scene-bg { filter: blur(1.5px) brightness(0.7) saturate(1.1); }
 body[data-screen="profile"] .wrap,
 body[data-screen="settings"] .wrap,
 body[data-screen="shipyard"] .wrap,
 body[data-screen="howto"] .wrap,
 body[data-screen="achievements"] .wrap,
+body[data-screen="daily"] .wrap,
 body[data-screen="leaderboard"] .wrap { max-width: 1240px; padding: 0 clamp(12px, 3vw, 40px); }
 .board-screen { min-height: 100vh; align-content: center; justify-items: center; gap: 14px; padding: 64px 0 28px; }
 
@@ -1388,3 +1391,84 @@ button.porthole:hover .porthole-edit, button.porthole:focus-visible .porthole-ed
 .avatar-actions .plaque-button { position: static; transform: none; }
 .avatar-window .link { font-size: 0.85rem; color: #f3d48a; }
 @media (max-width: 620px) { .avatar-layout { grid-template-columns: minmax(0, 1fr); } .avatar-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ===== Upgrade: Daily Challenge, live sea news, real weather ===== */
+
+/* main menu: Set sail and Daily challenge side by side */
+.menu-main-row { width: 100%; display: flex; justify-content: center; gap: 28px; }
+.menu-main-row .pill-main { width: min(380px, 100%); }
+.pill-daily .pill-face { font-size: 1.7rem; background: linear-gradient(180deg, #2f8f8a 0%, #1f6764 55%, #134846 100%); }
+.pill-daily:hover:not(:disabled) .pill-face, .pill-daily:focus-visible .pill-face { background: linear-gradient(180deg, #43b7ae 0%, #2a8a84 55%, #1a5f5b 100%); }
+.pill-daily { animation: rise-up 0.6s 0.2s ease-out backwards; }
+@media (max-width: 760px) {
+  .menu-main-row { flex-direction: column; align-items: center; gap: 22px; }
+  .pill-daily .pill-face { font-size: 1.3rem; }
+}
+
+/* "3 captains at sea" - live from the server */
+.online-badge { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; color: #e7f6ef; font-size: 0.9rem;
+  background: linear-gradient(180deg, rgba(20,40,40,0.85), rgba(8,20,22,0.85)); border: 2px solid #3f9f8a; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.online-badge b { font-family: "Lilita One", var(--display); font-weight: 400; font-size: 1.2rem; color: #8ff0c4; }
+.online-badge i { width: 10px; height: 10px; border-radius: 50%; background: #5df0a8; box-shadow: 0 0 8px #5df0a8; animation: online-pulse 1.8s ease-in-out infinite; }
+@keyframes online-pulse { 50% { opacity: 0.35; } }
+@media (max-width: 620px) { .online-badge span { display: none; } }
+
+/* Daily Challenge screen */
+.daily-frame { padding-top: 40px; }
+.daily-date { margin: -8px 0 14px; text-align: center; font-family: "Cinzel", Georgia, serif; font-weight: 700; color: #f3d48a; text-shadow: 0 2px 0 #1a120c; }
+.daily-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.daily-main { display: block; text-align: center; min-height: 340px; }
+.daily-main h2 { margin: 4px 0 10px; font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: 1.5rem; color: #2e1c08; }
+.daily-main p { margin: 0 0 12px; font-size: 1rem; color: #3a2508; }
+.daily-main .daily-small { font-size: 0.88rem; color: #5a4020; }
+.daily-main .plaque-button { position: static; transform: none; margin: 8px auto 0; }
+.daily-clock-row { display: flex; justify-content: center; align-items: baseline; gap: 10px; margin-bottom: 10px; font-family: "Cinzel", Georgia, serif; font-weight: 900; color: #5a3a10; }
+.daily-clock-row b { font-family: var(--mono); font-size: 2rem; color: #7a1a16; min-width: 6ch; }
+.daily-picture { display: block; width: 100%; max-height: 46vh; object-fit: contain; border-radius: 6px; background: #0b2430; box-shadow: 0 0 0 3px #5a4b3f, 0 6px 14px rgba(0,0,0,0.4); }
+.daily-inputs { display: flex; flex-wrap: wrap; justify-content: center; align-items: end; gap: 12px 18px; margin-top: 14px; }
+.daily-inputs label { display: grid; gap: 4px; font-family: "Cinzel", Georgia, serif; font-weight: 900; color: #2e1c08; text-align: left; }
+.daily-inputs input { width: 110px; font-size: 1.2rem; }
+.daily-inputs .plaque-button { margin: 0; }
+.daily-play-message, .daily-message { min-height: 1.3em; margin: 10px 0 0 !important; font-weight: 700; color: #8a1f12 !important; }
+.daily-result { display: grid; justify-items: center; gap: 4px; }
+.daily-result b { font-family: var(--mono); font-size: 3rem; color: #7a1a16; }
+.daily-result span { font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: 1.3rem; color: #3a2508; }
+.daily-side { padding: 14px 16px; border-radius: 6px; background: linear-gradient(180deg, #5b4a3a, #3d3127); box-shadow: inset 0 0 0 2px #1d1610, inset 0 0 24px rgba(0,0,0,0.5); }
+.daily-side .ribbon-label { float: none; display: inline-block; margin-bottom: 10px; }
+.daily-board { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.daily-row { display: grid; grid-template-columns: 34px 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.25); color: #eadbc0; }
+.daily-row .portrait { width: 44px; height: 44px; }
+.daily-row.me { background: rgba(243,212,138,0.18); box-shadow: inset 0 0 0 2px #f3d48a; }
+.daily-rank { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-family: "Cinzel", Georgia, serif; font-weight: 900; color: #2a1a08; background: linear-gradient(180deg, #d9d2c4, #8f877b); }
+.daily-row.top1 .daily-rank { background: linear-gradient(180deg, #fff0b0, #e2b13e 55%, #8a5f12); }
+.daily-row.top2 .daily-rank { background: linear-gradient(180deg, #ffffff, #c3c8cc 55%, #6f767c); }
+.daily-row.top3 .daily-rank { background: linear-gradient(180deg, #ffd2a8, #c27a42 55%, #6a3a17); }
+.daily-name { display: grid; min-width: 0; }
+.daily-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.daily-name small { font-size: 0.75rem; color: #c9b896; }
+.daily-time { font-family: var(--mono); font-size: 1.1rem; color: #ffd36b; }
+.daily-empty { margin: 6px 0 0; color: #d9c8a4; font-size: 0.92rem; }
+.daily-board:not(:empty) + .daily-empty { display: none; }
+@media (max-width: 860px) { .daily-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* live sea news pop-ups */
+.toasts { position: fixed; bottom: 16px; right: 16px; align-content: end; z-index: 60; display: grid; gap: 10px; width: min(360px, calc(100vw - 32px)); pointer-events: none; }
+.toast { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 8px; color: #f3e6c8; pointer-events: auto;
+  background: linear-gradient(180deg, rgba(48,38,28,0.96), rgba(28,22,16,0.96)); box-shadow: inset 0 0 0 2px #b8944e, 0 10px 26px rgba(0,0,0,0.6);
+  animation: toast-in 0.35s ease-out both; }
+.toast.mine { box-shadow: inset 0 0 0 2px #5df0a8, 0 10px 26px rgba(0,0,0,0.6); }
+.toast.leaving { animation: toast-out 0.5s ease-in both; }
+.toast-icon { font-size: 1.6rem; line-height: 1; }
+.toast-text { display: grid; gap: 2px; font-size: 0.92rem; }
+.toast-text b { font-family: "Cinzel", Georgia, serif; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: #f3d48a; }
+/* in battle the bottom corner has the sonar lever, so the news shows below the top bar */
+body[data-screen="game"] .toasts { bottom: auto; top: 84px; }
+@keyframes toast-in { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { to { opacity: 0; transform: translateX(30px); } }
+@media (prefers-reduced-motion: reduce) { .toast, .toast.leaving { animation: none; } }
+
+/* weather choice in Settings, and the forecast line on the map */
+.brass-select { min-width: 190px; }
+.map-weather { font-size: 0.85rem; color: #e8dcbc; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,0.3); box-shadow: inset 0 0 0 1px rgba(143,211,255,0.45); }
+.map-weather::before { content: "☁ "; color: #8fd3ff; }
+.map-weather b { color: #f3d48a; }

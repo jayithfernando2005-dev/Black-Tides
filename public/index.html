@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Black Tides. -->
+<!-- Black Tides. AI note: written with help from Claude (Anthropic), as allowed for this assignment. -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -124,6 +124,8 @@
           <span class="captain-emblem" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a2.5 2.5 0 0 1 1 4.8V9h3v2h-3v8.9c2.6-.4 4.6-2.2 5.3-4.6L16 16l3.5-4 2.5 5-1.9-.6C19.1 20 15.9 22.5 12 22.5S4.9 20 3.9 16.4L2 17l2.5-5L8 16l-2.3-.7c.7 2.4 2.7 4.2 5.3 4.6V11H8V9h3V6.8A2.5 2.5 0 0 1 12 2Zm0 1.6a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z" fill="currentColor"/></svg></span>
           <div><span class="label">Captain</span><b id="menu-captain">Guest</b></div>
         </div>
+        <!-- js/liveFeed.js fills this from the server's live "online" events -->
+        <div class="online-badge" id="menu-online" hidden><i aria-hidden="true"></i><b>1</b> <span>captain at sea</span></div>
         <div class="gold-badge" title="Gold">
           <span class="coin" aria-hidden="true"></span><b id="menu-gold">0</b><span class="label">gold</span>
         </div>
@@ -132,7 +134,10 @@
         <h1 class="menu-title"><img src="img/logo.png" alt="Black Tides" width="970" height="192"></h1>
       </div>
       <nav class="menu-buttons" aria-label="Main menu">
-        <button type="button" class="pill pill-main" data-nav="map"><span class="pill-face">Set sail</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        <div class="menu-main-row">
+          <button type="button" class="pill pill-main" data-nav="map"><span class="pill-face">Set sail</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+          <button type="button" class="pill pill-main pill-daily" data-nav="daily"><span class="pill-face">Daily challenge</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        </div>
         <div class="pill-grid">
           <button type="button" class="pill" data-nav="shipyard"><span class="pill-face">Shipyard</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
           <button type="button" class="pill" data-nav="leaderboard"><span class="pill-face">Leaderboard</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
@@ -189,6 +194,7 @@
         <div class="map-footer">
           <span id="map-count">Campaign progress</span>
           <button type="button" class="plaque-button header-plaque" id="endless-button" data-nav="game">Endless voyage</button>
+          <span class="map-weather" id="map-weather" hidden></span>
         </div>
       </div>
     </section>
@@ -346,6 +352,60 @@
       <p class="board-note">Your own row glows gold. Only logged-in captains' scores are saved.</p>
     </section>
 
+    <!-- ========== DAILY CHALLENGE ========== -->
+    <!-- One Fish API picture per day, the same for every captain (js/daily.js, server/daily.js). -->
+    <section class="screen board-screen daily-screen" id="screen-daily" hidden>
+      <div class="board-frame daily-frame">
+        <div class="frame-header">
+          <h1 class="engraved">Daily Challenge</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="menu">Main menu</button>
+        </div>
+        <p class="daily-date" id="daily-date"></p>
+
+        <div class="daily-layout">
+          <div class="daily-main parchment">
+            <!-- before starting -->
+            <div id="daily-intro">
+              <h2>Today's sonar picture</h2>
+              <p id="daily-rules">Count the fish as fast as you can.</p>
+              <p class="daily-small">Every captain gets the same picture today. The clock starts when you press the button and keeps running on the server, even if you leave.</p>
+              <button type="button" class="plaque-button action-plaque save-plaque" id="daily-start">Start the clock</button>
+            </div>
+            <!-- playing -->
+            <form id="daily-play" hidden>
+              <div class="daily-clock-row"><span>Time</span><b id="daily-clock" aria-live="off">0.0 s</b></div>
+              <img id="daily-picture" class="daily-picture" alt="Today's sonar picture: count the fish and the treasure chests">
+              <div class="daily-inputs" id="daily-form-fields">
+                <label><span>Fish</span> <input id="daily-fish" type="number" min="0" max="99" inputmode="numeric" autocomplete="off"></label>
+                <label><span>Chests <small>(optional)</small></span> <input id="daily-chest" type="number" min="0" max="99" inputmode="numeric" autocomplete="off"></label>
+                <button type="submit" class="plaque-button action-plaque save-plaque" id="daily-submit">Check</button>
+              </div>
+              <p class="daily-play-message" id="daily-play-message" role="status"></p>
+            </form>
+            <!-- finished -->
+            <div id="daily-done" hidden>
+              <h2>Challenge complete</h2>
+              <p class="daily-result"><b id="daily-result-time">-</b><span id="daily-result-rank"></span></p>
+              <p id="daily-result-note"></p>
+            </div>
+            <!-- guests -->
+            <div id="daily-guest" hidden>
+              <h2>Captains only</h2>
+              <p>Log in or create an account to take part in the Daily Challenge and get on today's board.</p>
+              <button type="button" class="plaque-button action-plaque" data-nav="login">Log in</button>
+            </div>
+            <p class="daily-message" id="daily-message" role="status"></p>
+          </div>
+
+          <div class="daily-side">
+            <h2 class="ribbon-label">Today's fastest</h2>
+            <ol class="daily-board" id="daily-board"></ol>
+            <p class="daily-empty" id="daily-empty">Nobody has finished today's challenge yet. Be the first!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ========== PROFILE ========== -->
     <!-- The same riveted frame as the leaderboard, over the living harbour scene. -->
     <section class="screen board-screen profile-screen" id="screen-profile" hidden>
@@ -479,6 +539,14 @@
           <fieldset class="plank-panel play-panel">
             <legend class="ribbon-label">Play</legend>
             <div class="plank-row"><label for="set-shake">Screen shake when hit</label><input class="iron-check" id="set-shake" type="checkbox"></div>
+            <div class="plank-row"><label for="set-news">Live sea news pop-ups</label><input class="iron-check" id="set-news" type="checkbox"></div>
+            <div class="plank-row"><label for="set-weather">Real weather for the Endless voyage</label>
+              <select id="set-weather" class="brass-select">
+                <option value="colombo">Colombo</option><option value="kandy">Kandy</option><option value="galle">Galle</option>
+                <option value="jaffna">Jaffna</option><option value="trincomalee">Trincomalee</option>
+                <option value="luton">Luton (Bedfordshire)</option><option value="london">London</option>
+              </select>
+            </div>
             <div class="plank-row keys-row">
               <span class="keys-label" id="keys-label">Steering keys</span>
               <!-- The real value lives in this select (screens.js reads it); the ship's wheel is a nicer way to change it. -->
@@ -616,6 +684,9 @@
       <p class="msg" id="battle-message" role="status" aria-live="polite"></p>
     </section>
   </main>
+
+  <!-- Live sea news pop-ups (js/liveFeed.js) -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script type="module" src="js/main.js"></script>
 </body>

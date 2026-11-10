@@ -1,8 +1,10 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // db.js - opens the game's own database and makes sure every table exists.
 // It is one file, blacktides.db, next to server.js. SQLite is built into Node.js.
 const { DatabaseSync } = require("node:sqlite");
 
-const db = new DatabaseSync("blacktides.db");
+// The automated tests set BLACKTIDES_DB to ":memory:" so they never touch the real database.
+const db = new DatabaseSync(process.env.BLACKTIDES_DB || "blacktides.db");
 
 // Captains: one row per account. Passwords are stored as hashes, never as text.
 db.exec(`
@@ -64,5 +66,27 @@ addColumnIfMissing("users", "avatar", "TEXT");
 addColumnIfMissing("users", "avatar_image", "BLOB");
 addColumnIfMissing("users", "avatar_type", "TEXT");
 addColumnIfMissing("users", "avatar_updated", "INTEGER NOT NULL DEFAULT 0");
+
+// The Daily Challenge: one Fish API puzzle per day, the same for every captain.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS daily_puzzles (
+    day   TEXT PRIMARY KEY,
+    image TEXT NOT NULL,
+    fish  INTEGER NOT NULL,
+    chest INTEGER NOT NULL
+  )
+`);
+// One row per captain per day: when they opened the puzzle and how long it took.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS daily_results (
+    day         TEXT NOT NULL,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    started_at  INTEGER NOT NULL,
+    wrong       INTEGER NOT NULL DEFAULT 0,
+    chest_right INTEGER NOT NULL DEFAULT 0,
+    seconds     REAL,
+    PRIMARY KEY (day, user_id)
+  )
+`);
 
 module.exports = db;

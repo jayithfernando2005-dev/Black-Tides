@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // api.js - every request from the browser to OUR server goes through this file.
 // The browser never talks to the Fish API directly; the server does that,
 // so the answers to a sonar puzzle never reach the browser.
@@ -131,4 +132,28 @@ export function completeStage(id) {
 // choice: { preset: 0-11 } or { image: dataUrl } or { reset: true }. Returns { avatar, avatarVersion }.
 export function saveAvatar(choice) {
   return postJson("/api/profile/avatar", choice);
+}
+
+// ----- The Daily Challenge -----
+
+// { day, rules, me: { status, seconds, wrong }, board: [...] } - never the picture.
+export function getDaily() {
+  return getJson("/api/daily");
+}
+
+// Starts (or continues) the clock. Returns { image, wrong, elapsed }.
+export function startDaily() {
+  return postJson("/api/daily/start", {});
+}
+
+// Returns { correct: false, wrong } or { correct: true, seconds, rank, gold, chestRight, chests }.
+export function answerDaily(fish, chest) {
+  return postJson("/api/daily/answer", { fish: fish, chest: chest });
+}
+
+// ----- Real weather (Open-Meteo, through our server) -----
+
+// { cityName, temperature, wind, label, storm, fog, windPush }
+export function getWeather(city) {
+  return getJson("/api/weather?city=" + encodeURIComponent(city));
 }

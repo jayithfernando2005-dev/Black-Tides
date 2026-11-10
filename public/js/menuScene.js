@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // menuScene.js - the living harbour battle behind the main menu (img/menu.jpg).
 // liveScene.js does the animation; this file only says where things are in the
 // picture, and starts or stops the scene when the menu is shown or hidden.
@@ -55,7 +56,7 @@ export function loadMenuScene() {
 }
 
 // Event: a screen was shown. The scene plays behind the main menu and the screens opened from it.
-const SCENE_SCREENS = ["menu", "howto", "shipyard", "leaderboard", "profile", "achievements", "settings"];
+const SCENE_SCREENS = ["menu", "daily", "howto", "shipyard", "leaderboard", "profile", "achievements", "settings"];
 on("screen:shown", (name) => {
   if (SCENE_SCREENS.includes(name)) {
     canvas.classList.add("on");

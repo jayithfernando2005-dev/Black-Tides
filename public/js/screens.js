@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // screens.js - every screen and the navigation between them.
 // Each screen has its own address (#/menu, #/leaderboard, ...), so the
 // browser's Back and Forward buttons work, and Escape returns to the menu.
@@ -12,6 +13,7 @@ import { renderPortrait, openPortraitPicker } from "./portraits.js";
 
 let myPortrait = { avatar: null, avatarVersion: 0 };
 import { renderAchievementCards } from "./achievementsView.js";
+import { showDaily, leaveDaily } from "./daily.js";
 import { showMap, getVoyage, advanceTo, chooseStage, chooseEndless } from "./campaign.js";
 
 let lastVoyage = null;     // the voyage that just ended, for "Play again"
@@ -27,6 +29,7 @@ const SCREENS = {
   achievements: "Achievements",
   settings: "Settings",
   map: "Campaign map",
+  daily: "Daily Challenge",
   game: "Battle"
 };
 const OPEN_SCREENS = ["login", "register"];      // screens for people not signed in
@@ -81,6 +84,9 @@ function route() {
   // Leaving the battle (menu button, Back button, or Escape on the end panel) stops it.
   if (current === "game" && name !== "game") {
     emit("battle:stop");
+  }
+  if (current === "daily" && name !== "daily") {
+    leaveDaily();                                 // stop the on-screen clock (the server keeps the real one)
   }
   current = name;
 
@@ -139,6 +145,10 @@ const loaders = {
 
   map() {
     showMap();
+  },
+
+  daily() {
+    showDaily(player.username);
   },
 
   async menu() {
@@ -214,6 +224,8 @@ const loaders = {
     $("set-mute").checked = settings.mute;
     $("set-shake").checked = settings.shake;
     $("set-keys").value = settings.keys;
+    $("set-news").checked = settings.liveNews;
+    $("set-weather").value = settings.weatherCity;
     showVolumes();
     $("settings-message").textContent = "";
     $("set-stay").disabled = player.guest;
@@ -356,7 +368,9 @@ $("settings-form").addEventListener("submit", async (event) => {
     ambience: $("set-ambience").value,
     mute: $("set-mute").checked,
     shake: $("set-shake").checked,
-    keys: $("set-keys").value
+    keys: $("set-keys").value,
+    liveNews: $("set-news").checked,
+    weatherCity: $("set-weather").value
   });
   let text = "Settings saved on this device.";
   if (!player.guest && $("set-stay").checked !== player.remember) {
