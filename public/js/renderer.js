@@ -1,5 +1,9 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // renderer.js - draws the battle on the canvas. It only draws; it never
 // changes the game. Visual style based on the Black Tides prototype.
+import { drawKraken } from "./krakenArt.js";
+import { drawSlamWarnings, drawSlamTentacles } from "./hazards.js";
+import { drawEventBelow, drawEventAbove } from "./seaEvents.js";
 import * as art from "./battleArt.js";
 
 const TAU = Math.PI * 2;
@@ -193,6 +197,10 @@ export function drawBattle(ctx, scene) {
     else drawCrate(ctx, crate, scene.crateColours[crate.type]);
   }
 
+  // Sea events and tentacle warnings sit on the water, under the ships.
+  drawEventBelow(ctx, scene.time);
+  drawSlamWarnings(ctx, scene.time);
+
   // Dashed aiming line from the ship to the mouse.
   if (scene.aiming) {
     ctx.strokeStyle = "rgba(232,195,114,0.55)";
@@ -205,7 +213,10 @@ export function drawBattle(ctx, scene) {
   // Painted ships are drawn before the cannonballs so the fire shows on top.
   if (painted) {
     const fleet = [...scene.raiders].sort((a, b) => a.y - b.y);   // ships further up are behind
-    for (const raider of fleet) art.drawPaintedRaider(ctx, raider, scene.time);
+    for (const raider of fleet) {
+      if (raider.kraken) drawKraken(ctx, raider, scene.time);
+      else art.drawPaintedRaider(ctx, raider, scene.time);
+    }
     if (scene.shipAfloat) art.drawPaintedPlayer(ctx, ship, scene.time, scene.shipFlash);
     for (const shot of scene.enemyShots) art.drawFireShot(ctx, shot);
     for (const shot of scene.shots) art.drawIronShot(ctx, shot);
@@ -224,6 +235,7 @@ export function drawBattle(ctx, scene) {
   }
 
   for (const raider of painted ? [] : scene.raiders) {
+    if (raider.kraken) { drawKraken(ctx, raider, scene.time); continue; }
     drawShip(ctx, raider.x, raider.y, raider.angle, raider.scale, COLOURS.rust, COLOURS.rustDeck, raider.flash > 0);
     if (!raider.boss && raider.hp < raider.maxHp) {
       ctx.fillStyle = COLOURS.dark;
@@ -253,6 +265,21 @@ export function drawBattle(ctx, scene) {
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(effect.x, effect.y, effect.r * (1 - effect.life / effect.max) + 6, 0, TAU); ctx.stroke();
     }
+  }
+
+  // Tentacles, the merchant ship, and floating points go over the ships.
+  drawSlamTentacles(ctx, scene.time);
+  drawEventAbove(ctx, scene.time);
+  for (const popup of scene.popups || []) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, popup.life / 0.4));
+    ctx.textAlign = "center";
+    ctx.font = "700 " + (popup.big ? 24 : 18) + "px Cinzel, Georgia, serif";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "rgba(10,6,4,0.85)";
+    ctx.strokeText(popup.text, popup.x, popup.y);
+    ctx.fillStyle = popup.colour;
+    ctx.fillText(popup.text, popup.x, popup.y);
+    ctx.globalAlpha = 1;
   }
 
   if (scene.aiming) {
@@ -317,6 +344,33 @@ export function drawBattle(ctx, scene) {
     }
     ctx.globalAlpha = 1;
   }
+  if (scene.combo && scene.combo.count >= 2) drawCombo(ctx, scene.combo, width, scene.boss ? 72 : 16);
   if (art.ready("radar")) art.drawCompassRadar(ctx, scene);
   else drawRadar(ctx, scene);
+}
+
+// The combo counter in the top-right corner, with a bar that empties as time runs out.
+function drawCombo(ctx, combo, width, top) {
+  const x = width - 20;
+  ctx.save();
+  ctx.textAlign = "right";
+  const pulse = 1 + Math.max(0, combo.pop) * 0.6;            // grows for a moment on each new hit
+  ctx.font = "900 " + Math.round(30 * pulse) + "px Cinzel, Georgia, serif";
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = "rgba(20,8,4,0.85)";
+  const label = "COMBO x" + combo.multiplier;
+  ctx.strokeText(label, x, top + 30);
+  const gold = ctx.createLinearGradient(0, top, 0, top + 32);
+  gold.addColorStop(0, "#fff0b0"); gold.addColorStop(1, combo.multiplier >= 2 ? "#ff8a3d" : "#e2b13e");
+  ctx.fillStyle = gold;
+  ctx.fillText(label, x, top + 30);
+  ctx.font = "700 13px Cinzel, Georgia, serif";
+  ctx.fillStyle = "#f3e6c8";
+  ctx.strokeText(combo.count + " sunk in a row", x, top + 50);
+  ctx.fillText(combo.count + " sunk in a row", x, top + 50);
+  ctx.fillStyle = "rgba(10,6,4,0.7)";
+  ctx.fillRect(x - 150, top + 58, 150, 6);
+  ctx.fillStyle = "#ffd36b";
+  ctx.fillRect(x - 150 * combo.timeLeft, top + 58, 150 * combo.timeLeft, 6);
+  ctx.restore();
 }

@@ -5,7 +5,9 @@
 import { drawBattle } from "./renderer.js";
 import { isDown, getMouse, watchMouse, isTyping } from "./input.js";
 import { fireShot, updateShots, checkPlayerHit, clearShots, getShots, getEnemyShots } from "./shots.js";
-import { spawnRaider, spawnBoss, updateRaiders, checkHits, clearRaiders, getRaiders, getBoss } from "./enemies.js";
+import { spawnRaider, spawnBoss, spawnKraken, updateRaiders, checkHits, removeWrecks, clearRaiders, getRaiders, getBoss, REWARDS } from "./enemies.js";
+import { updateSlams, clearSlams } from "./hazards.js";
+import { planEvent, updateEvent, clearEvent, forceEvent, EVENT_INFO } from "./seaEvents.js";
 import { POWERUPS, updatePowerups, getCrates, clearPowerups } from "./powerups.js";
 import { explode, foam, addShake, updateEffects, getEffects, getShake, clearEffects } from "./effects.js";
 import { openSonar, closeSonar, isSonarOpen } from "./sonar.js";
@@ -34,8 +36,10 @@ const EDGE = 25;
 const FIRE_DELAY = 0.28;           // seconds between shots
 const WAVE_REPAIR = 20;            // hull repaired after each wave
 const WIND_SPEED = 26;             // storm wind pushes the ship sideways
-const POINTS = { raider: 100, boss: 600, reload: 50 };
-const GOLD = { raider: 10, boss: 60, chest: 25 };
+const POINTS = { reload: 50 };          // points and gold for each ship type are in enemies.js (REWARDS)
+const GOLD = { chest: 25 };
+const COMBO_SECONDS = 3;                // sink the next ship within 3 s to keep the combo going
+const SEA_EVENT_CHANCE = 0.4;           // chance of a sea event in a wave (from wave 2)
 const CHEST_PENALTY = 10;          // hull lost for a wrong chest count
 
 // state is one of: idle, loading, playing, paused, clearing, shipyard, over
@@ -83,7 +87,10 @@ async function startBattle(voyage) {
     damagedThisWave: false, untouched: false, underFire: false,
     clearTimer: 0, spawnQueue: [], spawnTimer: 0,
     storm: false, wind: 0, shield: 0, rapid: 0, flash: 0, banner: null,
-    weather: null                              // real weather for the Endless voyage (Open-Meteo)
+    weather: null,                             // real weather for the Endless voyage (Open-Meteo)
+    combo: { count: 0, timer: 0, multiplier: 1, pop: 0 }, bestCombo: 0,
+    popups: [],                                // floating "+150" texts
+    seaEvents: 0, escorts: 0
   };
   say("Preparing your ship...");
   let progress = { gold: 0 };
@@ -112,6 +119,8 @@ async function startBattle(voyage) {
   applyUpgrades(progress);
   Object.assign(ship, { x: W / 2, y: H * 0.62, angle: -Math.PI / 2, hull: stats.maxHull, ammo: stats.cap, cooldown: 0, foamTimer: 0 });
   clearRaiders();
+  clearSlams();
+  clearEvent();
   clearShots();
   clearPowerups();
   clearEffects();
@@ -170,23 +179,36 @@ function startWave(number) {
   const windPush = weather ? weather.windPush : 1;     // a real gale pushes harder
   run.wind = run.storm ? (Math.random() < 0.5 ? -1 : 1) * WIND_SPEED * windPush : 0;
 
-  // Stage rules: which waves bring the flagship, extra raiders, tougher raiders.
-  const bossWave = stage ? stage.bossWaves.includes(number) : number % 5 === 0;
+  // Stage rules: which waves bring the flagship or the kraken, extra raiders, tougher raiders.
+  // Endless voyage: the kraken every 10th wave, the flagship every other 5th wave.
+  const krakenWave = stage ? (stage.kraken || []).includes(number) : number % 10 === 0;
+  const bossWave = krakenWave || (stage ? stage.bossWaves.includes(number) : number % 5 === 0);
   const extra = stage ? stage.extra : 0;
   const raiders = (bossWave ? 2 : Math.min(2 + number, 8)) + extra;
   run.toughness = number + (stage ? stage.harder : 0);
   run.spawnQueue = [];
-  if (bossWave) {
+  if (krakenWave) {
+    spawnKraken(W, H, run.toughness);
+  } else if (bossWave) {
     spawnBoss(W, H, run.toughness);
   }
+  // The mix of ships gets harder: cutters from wave 3, ironclads from wave 5.
   for (let i = 0; i < raiders; i++) {
-    run.spawnQueue.push("raider");
+    let type = "raider";
+    if (run.toughness >= 5 && i % 4 === 3) type = "ironclad";
+    else if (run.toughness >= 3 && i % 3 === 1) type = "cutter";
+    run.spawnQueue.push(type);
   }
   run.spawnTimer = 0.4;
+  clearSlams();
+  if (planEvent(number, SEA_EVENT_CHANCE, bossWave)) run.seaEvents += 1;
 
   let text = "";
   let colour = null;
-  if (bossWave) {
+  if (krakenWave) {
+    text = "The kraken rises from the deep - dodge its tentacles";
+    colour = "#e07ad8";
+  } else if (bossWave) {
     text = "The raider flagship is coming";
     colour = "#de6a48";
   } else if (run.storm) {
@@ -214,6 +236,8 @@ function startWave(number) {
 async function clearWave() {
   state = "clearing";
   closeSonar();
+  clearEvent();
+  clearSlams();
   if (!run.damagedThisWave) {
     run.untouched = true;
   }
@@ -272,6 +296,9 @@ function summary() {
     puzzlesSolved: run.puzzlesSolved,
     underFire: run.underFire,
     untouched: run.untouched,
+    bestCombo: run.bestCombo,
+    seaEvents: run.seaEvents,
+    escorts: run.escorts,
     stage: run.stage
   };
 }
@@ -302,6 +329,75 @@ async function sinkPlayer() {
   stopAmbience();
   await bankGold();
   emit("battle:over", summary());
+}
+
+// A raider, flagship or kraken has sunk: points (times the combo), gold and a floating text.
+function sinkRaider(wreck, cause) {
+  const reward = REWARDS[wreck.type] || REWARDS.raider;
+  explode(wreck.x, wreck.y, wreck.boss);
+  run.sunk += 1;
+
+  // Combo: each ship sunk within COMBO_SECONDS of the last one adds to the chain.
+  const combo = run.combo;
+  combo.count = combo.timer > 0 ? combo.count + 1 : 1;
+  combo.timer = COMBO_SECONDS;
+  combo.pop = 0.3;
+  combo.multiplier = Math.min(3, 1 + 0.5 * Math.floor((combo.count - 1) / 2));   // x1, x1.5, x2 ... x3
+  run.bestCombo = Math.max(run.bestCombo, combo.count);
+  if (combo.count >= 2) emit("combo:changed", { count: combo.count, multiplier: combo.multiplier });
+
+  const points = Math.round(reward.points * combo.multiplier);
+  run.score += points;
+  addGold(reward.gold);
+  popup(wreck.x, wreck.y - 30, "+" + points + (combo.multiplier > 1 ? "  x" + combo.multiplier : ""), combo.multiplier > 1 ? "#ff9a4d" : "#ffe9a8", wreck.boss);
+
+  if (wreck.type === "kraken") {
+    run.bosses += 1;
+    say("The kraken sinks back into the deep! +" + points + " points, +" + reward.gold + " gold.", "good");
+  } else if (wreck.boss) {
+    run.bosses += 1;
+    say("The flagship is sunk! +" + points + " points, +" + reward.gold + " gold.", "good");
+  } else if (cause === "whirlpool") {
+    say("A raider was swallowed by the whirlpool! +" + points + " points.", "good");
+  }
+  emit("raider:sunk", wreck);
+}
+
+function updateCombo(seconds) {
+  const combo = run.combo;
+  combo.pop = Math.max(0, combo.pop - seconds);
+  if (combo.timer > 0) {
+    combo.timer -= seconds;
+    if (combo.timer <= 0) {
+      if (combo.count >= 2) emit("combo:ended", { count: combo.count });
+      combo.count = 0;
+      combo.multiplier = 1;
+    }
+  }
+}
+
+// Damage to our ship from anything. steady: small damage every frame (the whirlpool).
+function hurtShip(damage, steady = false) {
+  if (damage <= 0) return;
+  if (run.shield > 0) {
+    if (!steady) emit("shield:blocked");
+    return;
+  }
+  ship.hull = Math.max(0, ship.hull - damage);
+  run.damagedThisWave = true;
+  if (steady) return;
+  run.flash = 0.15;
+  if (getSettings().shake) addShake(0.5);
+  // Being hit breaks the combo.
+  if (run.combo.count >= 2) emit("combo:ended", { count: run.combo.count });
+  run.combo.count = 0;
+  run.combo.timer = 0;
+  run.combo.multiplier = 1;
+  emit("player:hit", damage);
+}
+
+function popup(x, y, text, colour, big) {
+  run.popups.push({ x: x, y: y, text: text, colour: colour, big: big === true, life: 1.2 });
 }
 
 function addGold(amount) {
@@ -446,8 +542,8 @@ function update(seconds) {
   if (run.spawnQueue.length > 0) {
     run.spawnTimer -= seconds;
     if (run.spawnTimer <= 0) {
-      run.spawnQueue.shift();
-      spawnRaider(W, H, run.toughness);
+      const type = run.spawnQueue.shift();
+      spawnRaider(W, H, run.toughness, type);
       run.spawnTimer = 0.6;
     }
   }
@@ -459,34 +555,36 @@ function update(seconds) {
   // Our cannonballs hitting raiders.
   const result = checkHits(getShots());
   for (let i = 0; i < result.hits; i++) emit("raider:hit");
-  for (const wreck of result.sunk) {
-    explode(wreck.x, wreck.y, wreck.boss);
-    run.sunk += 1;
-    if (wreck.boss) {
-      run.bosses += 1;
-      run.score += POINTS.boss;
-      addGold(GOLD.boss);
-      say("The flagship is sunk! +" + POINTS.boss + " points, +" + GOLD.boss + " gold.", "good");
-    } else {
-      run.score += POINTS.raider;
-      addGold(GOLD.raider);
-    }
-    emit("raider:sunk", wreck);
-  }
+  for (const wreck of result.sunk) sinkRaider(wreck, "cannon");
 
-  // Raider cannonballs hitting us.
-  const damage = checkPlayerHit(ship);
-  if (damage > 0) {
-    if (run.shield > 0) {
-      emit("shield:blocked");
-    } else {
-      ship.hull = Math.max(0, ship.hull - damage);
-      run.damagedThisWave = true;
-      run.flash = 0.15;
-      if (getSettings().shake) addShake(0.5);
-      emit("player:hit", damage);
-    }
+  // Raider cannonballs and kraken ink hitting us.
+  hurtShip(checkPlayerHit(ship));
+  // Tentacle slams (the kraken, or a tentacle attack).
+  hurtShip(updateSlams(seconds, ship));
+
+  // Sea events: whirlpool, merchant escort, tentacle attack.
+  const sea = updateEvent(seconds, ship, getRaiders(), W, H);
+  if (sea.message) {
+    const info = EVENT_INFO[sea.message];
+    run.banner = { title: info.title, text: info.text, colour: info.colour, time: 2.6 };
+    say(info.text + ".", "warn");
+    emit("sea:event", sea.message);
   }
+  if (sea.damage > 0) hurtShip(sea.damage, true);
+  if (sea.reward) {
+    run.score += sea.reward.points;
+    addGold(sea.reward.gold);
+    run.escorts += 1;
+    popup(ship.x, ship.y - 70, "+" + sea.reward.gold + " gold", "#ffd36b", true);
+    say("The merchant is safe! +" + sea.reward.points + " points, +" + sea.reward.gold + " gold.", "good");
+    emit("sea:reward", sea.reward);
+  }
+  for (const wreck of removeWrecks()) sinkRaider(wreck, "whirlpool");   // torn apart by the whirlpool
+
+  // The combo runs out if no ship is sunk in time.
+  updateCombo(seconds);
+  for (const p of run.popups) { p.life -= seconds; p.y -= 40 * seconds; }
+  run.popups = run.popups.filter((p) => p.life > 0);
 
   // Supply crates.
   const picked = updatePowerups(seconds, ship, W, H);
@@ -539,6 +637,8 @@ function draw() {
     boss: getBoss(),
     outOfShots: state === "playing" && ship.ammo === 0 && !isSonarOpen(),
     banner: run.banner,
+    combo: { count: run.combo.count, multiplier: run.combo.multiplier, pop: run.combo.pop, timeLeft: Math.max(0, run.combo.timer / COMBO_SECONDS) },
+    popups: run.popups,
     shake: getSettings().shake ? getShake() : 0
   });
 
@@ -570,4 +670,8 @@ watchMouse(canvas);
 requestAnimationFrame(gameLoop);
 
 // For testing in the browser console only: lets a test check the state.
-window.blackTides = { getState: () => state, getShip: () => ship, getRun: () => run };
+window.blackTides = {
+  getState: () => state, getShip: () => ship, getRun: () => run,
+  seaEvent: (kind) => forceEvent(kind),                     // e.g. blackTides.seaEvent("whirlpool")
+  kraken: () => spawnKraken(W, H, run ? run.toughness : 1)
+};

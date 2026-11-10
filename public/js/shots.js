@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shots.js - cannonballs: ours (bone) and the raiders' (rust).
 const SHOT_SPEED = 540;           // pixels per second
 const ENEMY_SHOT_SPEED = 250;
@@ -20,13 +21,16 @@ export function fireShot(ship, damage) {
 }
 
 // A raider fires a cannonball at an angle.
-export function fireEnemyShot(x, y, angle, damage) {
+// kind: "fire" (a cannonball) or "ink" (the kraken's ink blob, a little slower).
+export function fireEnemyShot(x, y, angle, damage, kind = "fire") {
+  const speed = kind === "ink" ? ENEMY_SHOT_SPEED * 0.8 : ENEMY_SHOT_SPEED;
   enemyShots.push({
     x: x, y: y,
-    vx: Math.cos(angle) * ENEMY_SHOT_SPEED,
-    vy: Math.sin(angle) * ENEMY_SHOT_SPEED,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
     life: 3,
-    damage: damage
+    damage: damage,
+    kind: kind
   });
 }
 

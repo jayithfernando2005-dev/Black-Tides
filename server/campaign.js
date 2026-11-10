@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaign.js - the nine stages of the Naval Campaign. Each stage is a battle with a goal
 // (survive a number of waves) and its own twist. Clearing a stage unlocks the next one.
 // The stage list lives only here on the server; the browser receives it from GET /api/campaign.
@@ -20,14 +21,14 @@ const STAGES = [
     text: "Thick fog. Trust your radar - raiders appear out of nowhere." },
   { id: 5, name: "Smugglers' Reef", icon: "chest", waves: 4, harder: 2, extra: 1, bossWaves: [], storm: "never", fog: false, goldBonus: 2,
     text: "More raiders, but every ship sunk pays double gold." },
-  { id: 6, name: "Kraken's Deep", icon: "raider", waves: 5, harder: 2, extra: 1, bossWaves: [], storm: "always", fog: false, goldBonus: 1,
-    text: "A storm that never ends. The wind pushes your ship all battle." },
+  { id: 6, name: "Kraken's Deep", icon: "raider", waves: 5, harder: 2, extra: 1, bossWaves: [], kraken: [5], storm: "always", fog: false, goldBonus: 1,
+    text: "A storm that never ends, and something huge waits below. The kraken rises in the last wave." },
   { id: 7, name: "Northern Bastion", icon: "bastion", waves: 5, harder: 3, extra: 1, bossWaves: [5], storm: "never", fog: false, goldBonus: 1,
     text: "Break the northern fortress. Its flagship waits at the end." },
   { id: 8, name: "Raider Port", icon: "port", waves: 6, harder: 4, extra: 1, bossWaves: [3, 6], storm: "always", fog: true, goldBonus: 1,
     text: "Storm and fog over the raiders' home port, with two flagships." },
-  { id: 9, name: "Galleon Graveyard", icon: "galleon", waves: 7, harder: 5, extra: 2, bossWaves: [4, 7], storm: "always", fog: false, goldBonus: 2,
-    text: "The final battle among the wrecks. Win it to rule the Black Tides." }
+  { id: 9, name: "Galleon Graveyard", icon: "galleon", waves: 7, harder: 5, extra: 2, bossWaves: [4], kraken: [7], storm: "always", fog: false, goldBonus: 2,
+    text: "The final battle among the wrecks: a flagship, then the kraken itself. Win it to rule the Black Tides." }
 ];
 
 const SECONDS_PER_WAVE = 4;     // a stage cannot honestly be won faster than this per wave

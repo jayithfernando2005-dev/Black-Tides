@@ -43,6 +43,7 @@ export function stageById(id) {
 function twists(stage) {
   const list = [];
   if (stage.bossWaves.length) list.push("Flagship in wave " + stage.bossWaves.join(" and "));
+  if (stage.kraken && stage.kraken.length) list.push("Kraken in wave " + stage.kraken.join(" and "));
   if (stage.storm === "always") list.push("Storm all battle");
   if (stage.fog) list.push("Fog");
   if (stage.extra) list.push("+" + stage.extra + " raider" + (stage.extra > 1 ? "s" : "") + " per wave");

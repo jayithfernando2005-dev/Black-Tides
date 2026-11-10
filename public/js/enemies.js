@@ -1,6 +1,10 @@
-// enemies.js - raider ships and the boss flagship: where they appear,
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
+// enemies.js - raider ships and the bosses: where they appear,
 // how they sail, when they fire, and when our cannonballs hit them.
+// Raider types: "raider" (normal), "cutter" (small and fast), "ironclad" (slow and armoured).
+// Bosses: the raider flagship, and the kraken (a sea monster that slams tentacles).
 import { fireEnemyShot, removeShot } from "./shots.js";
+import { addSlam } from "./hazards.js";
 import { emit } from "./events.js";
 
 const EDGE = 30;                  // raiders stay this far inside the sea once they arrive
@@ -15,28 +19,81 @@ function edgePoint(width, height) {
   return { x: -40, y: Math.random() * height };
 }
 
-// A raider gets tougher and faster in later waves.
-export function spawnRaider(width, height, wave) {
+// Points and gold for sinking each kind of ship (game.js uses these).
+export const REWARDS = {
+  raider: { points: 100, gold: 10 },
+  cutter: { points: 120, gold: 12 },
+  ironclad: { points: 250, gold: 25 },
+  flagship: { points: 600, gold: 60 },
+  kraken: { points: 1500, gold: 150 }
+};
+
+// A raider gets tougher and faster in later waves. type: "raider", "cutter" or "ironclad".
+export function spawnRaider(width, height, wave, type = "raider") {
   const start = edgePoint(width, height);
-  const hp = 2 + Math.floor(wave / 3);
-  raiders.push({
-    x: start.x, y: start.y, angle: 0,
-    hp: hp, maxHp: hp,
-    speed: Math.min(80 + 3 * wave, 115),
-    size: 18, scale: 1,
-    keepAway: 170 + Math.random() * 60,       // likes to sail at this distance
+  const base = {
+    x: start.x, y: start.y, angle: 0, type: type,
     side: Math.random() < 0.5 ? 1 : -1,       // circles left or right
     cooldown: 1 + Math.random() * 1.5,
-    reload: 2.2, damage: 10, spread: 1,
     flash: 0, entered: false, boss: false
+  };
+  let hp;
+  if (type === "cutter") {
+    // small, quick, darts in close, but sinks fast
+    hp = 1 + Math.floor(wave / 4);
+    Object.assign(base, { speed: Math.min(150 + 3 * wave, 185), size: 15, scale: 0.8, keepAway: 110 + Math.random() * 40, reload: 1.5, damage: 6, spread: 1 });
+  } else if (type === "ironclad") {
+    // slow and heavily armoured, fires a heavy double shot
+    hp = 6 + Math.floor(wave / 2);
+    Object.assign(base, { speed: 48, size: 24, scale: 1.25, keepAway: 240 + Math.random() * 40, reload: 3, damage: 16, spread: 2 });
+  } else {
+    hp = 2 + Math.floor(wave / 3);
+    Object.assign(base, { speed: Math.min(80 + 3 * wave, 115), size: 18, scale: 1, keepAway: 170 + Math.random() * 60, reload: 2.2, damage: 10, spread: 1 });
+  }
+  base.hp = hp;
+  base.maxHp = hp;
+  raiders.push(base);
+}
+
+// The kraken: rises in the upper sea, sprays ink and slams tentacles where the ship is.
+export function spawnKraken(width, height, wave) {
+  const hp = 50 + 5 * wave;
+  raiders.push({
+    x: width / 2, y: height * 0.3, homeX: width / 2, angle: Math.PI / 2, type: "kraken",
+    hp: hp, maxHp: hp, size: 72, hitOffset: -35, scale: 1,
+    cooldown: 2.5, slamTimer: 3, age: 0, speed: 0,
+    flash: 0, entered: true, boss: true, kraken: true
   });
+}
+
+function updateKraken(kraken, seconds, ship, width) {
+  kraken.age += seconds;
+  kraken.x = kraken.homeX + Math.sin(kraken.age * 0.35) * width * 0.25;   // drifts slowly side to side
+  kraken.angle = Math.atan2(ship.y - kraken.y, ship.x - kraken.x);
+  kraken.flash = Math.max(0, kraken.flash - seconds);
+  if (kraken.age < 2) return;                                 // still rising
+  kraken.cooldown -= seconds;
+  if (kraken.cooldown <= 0) {
+    // a fan of five ink blobs
+    for (let i = 0; i < 5; i++) {
+      const angle = kraken.angle + (i - 2) * 0.18;
+      fireEnemyShot(kraken.x + Math.cos(angle) * 60, kraken.y + Math.sin(angle) * 40, angle, 9, "ink");
+    }
+    kraken.cooldown = 2.4 + Math.random() * 0.8;
+    emit("raider:fired");
+  }
+  kraken.slamTimer -= seconds;
+  if (kraken.slamTimer <= 0) {
+    addSlam(ship.x, ship.y, { damage: 18, warn: 1.2, radius: 52 });   // a tentacle where the ship is now
+    kraken.slamTimer = kraken.hp < kraken.maxHp / 2 ? 2.2 : 3.4;       // angrier when hurt
+  }
 }
 
 // The boss flagship: twice the size, many more hit points, fires three cannonballs at once.
 export function spawnBoss(width, height, wave) {
   const hp = 12 + 2 * wave;
   raiders.push({
-    x: width / 2, y: -60, angle: Math.PI / 2,
+    x: width / 2, y: -60, angle: Math.PI / 2, type: "flagship",
     hp: hp, maxHp: hp,
     speed: 60, size: 34, scale: 1.9,
     keepAway: 240, side: 1,
@@ -48,6 +105,10 @@ export function spawnBoss(width, height, wave) {
 // Sails every raider towards our ship, circles at a distance, and fires.
 export function updateRaiders(seconds, ship, width, height) {
   for (const raider of raiders) {
+    if (raider.kraken) {
+      updateKraken(raider, seconds, ship, width);
+      continue;
+    }
     const dx = ship.x - raider.x;
     const dy = ship.y - raider.y;
     const distance = Math.hypot(dx, dy) || 1;
@@ -94,13 +155,13 @@ export function checkHits(shots) {
   const sunk = [];
   for (const shot of shots) {
     for (const raider of raiders) {
-      if (raider.hp > 0 && Math.hypot(shot.x - raider.x, shot.y - raider.y) < raider.size + 7) {
+      if (raider.hp > 0 && Math.hypot(shot.x - raider.x, shot.y - (raider.y + (raider.hitOffset || 0))) < raider.size + 7) {
         raider.hp -= shot.damage;
         raider.flash = 0.12;
         removeShot(shot);
         hits += 1;
         if (raider.hp <= 0) {
-          sunk.push({ x: raider.x, y: raider.y, boss: raider.boss });
+          sunk.push({ x: raider.x, y: raider.y, boss: raider.boss, type: raider.type });
         }
         break;
       }
@@ -108,6 +169,13 @@ export function checkHits(shots) {
   }
   raiders = raiders.filter((raider) => raider.hp > 0);
   return { hits: hits, sunk: sunk };
+}
+
+// Raiders sunk by something other than cannonballs (e.g. a whirlpool).
+export function removeWrecks() {
+  const sunk = raiders.filter((raider) => raider.hp <= 0).map((raider) => ({ x: raider.x, y: raider.y, boss: raider.boss, type: raider.type }));
+  raiders = raiders.filter((raider) => raider.hp > 0);
+  return sunk;
 }
 
 export function getRaiders() {

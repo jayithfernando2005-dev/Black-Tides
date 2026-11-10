@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // battleArt.js - the painted look of the battle: the stormy sea, the painted ships and
 // crates (cut from the Black Tides battle artwork), fiery cannonballs, falling fireballs,
 // the brass compass radar and the flagship plaque. Only drawing - it never changes the game.
@@ -164,15 +165,65 @@ export function drawPaintedRaider(ctx, raider, time) {
   const faceRight = Math.cos(raider.angle) >= 0;
   if (raider.boss) {
     paintedShip(ctx, "boss", raider.x, raider.y - 10, faceRight, 200, time, raider.flash > 0, look.seed);
+    return;
+  }
+  if (raider.type === "cutter") {
+    // a small, quick ship with white spray lines behind it
+    ctx.save();
+    ctx.strokeStyle = "rgba(230,245,250,0.5)";
+    ctx.lineWidth = 2;
+    const back = faceRight ? -1 : 1;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(raider.x + back * 22, raider.y + 8 + i * 5);
+      ctx.lineTo(raider.x + back * (40 + i * 8 + Math.sin(time * 9 + i) * 4), raider.y + 10 + i * 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+    paintedShip(ctx, look.key, raider.x, raider.y - 8, faceRight, 58, time, raider.flash > 0, look.seed);
+  } else if (raider.type === "ironclad") {
+    // a big, dark, iron-plated ship
+    ctx.save();
+    ctx.filter = "grayscale(0.85) brightness(0.62) contrast(1.2)";
+    paintedShip(ctx, look.key, raider.x, raider.y - 12, faceRight, 100, time, raider.flash > 0, look.seed);
+    ctx.restore();
+    ctx.save();
+    ctx.strokeStyle = "rgba(170,180,190,0.75)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(raider.x - 34, raider.y + 6); ctx.lineTo(raider.x + 34, raider.y + 6); ctx.stroke();
+    ctx.fillStyle = "rgba(210,215,220,0.9)";
+    for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.arc(raider.x + i * 10, raider.y + 6, 1.8, 0, TAU); ctx.fill(); }
+    ctx.restore();
   } else {
     paintedShip(ctx, look.key, raider.x, raider.y - 10, faceRight, 78, time, raider.flash > 0, look.seed);
-    if (raider.hp < raider.maxHp) {
-      ctx.fillStyle = "rgba(10,6,4,0.8)";
-      ctx.fillRect(raider.x - 18, raider.y - 44, 36, 5);
-      ctx.fillStyle = "#e0422e";
-      ctx.fillRect(raider.x - 18, raider.y - 44, 36 * (raider.hp / raider.maxHp), 5);
-    }
   }
+  // health bar (always shown for ironclads, once hit for the others)
+  if (raider.hp < raider.maxHp || raider.type === "ironclad") {
+    const top = raider.type === "ironclad" ? raider.y - 56 : raider.y - 44;
+    ctx.fillStyle = "rgba(10,6,4,0.8)";
+    ctx.fillRect(raider.x - 18, top, 36, 5);
+    ctx.fillStyle = raider.type === "ironclad" ? "#b8c4cc" : "#e0422e";
+    ctx.fillRect(raider.x - 18, top, 36 * Math.max(0, raider.hp / raider.maxHp), 5);
+  }
+}
+
+// A friendly merchant ship for the escort sea event: a painted ship, lighter and warmer,
+// with a white flag. Returns false if the pictures are not loaded yet.
+export function drawPaintedMerchant(ctx, x, y, faceRight, time) {
+  if (!ready("raider2")) return false;
+  ctx.save();
+  ctx.filter = "sepia(0.55) saturate(1.3) brightness(1.25)";
+  paintedShip(ctx, "raider2", x, y - 10, faceRight, 84, time, false, 3);
+  ctx.restore();
+  // a white flag of peace on top of the mast
+  ctx.save();
+  const wave = Math.sin(time * 6) * 3;
+  ctx.strokeStyle = "#3d2614"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y - 44); ctx.lineTo(x, y - 62); ctx.stroke();
+  ctx.fillStyle = "#f4f1e6";
+  ctx.beginPath(); ctx.moveTo(x, y - 62); ctx.quadraticCurveTo(x + 10, y - 60 + wave, x + 20, y - 58); ctx.lineTo(x, y - 51); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  return true;
 }
 
 // ---------- crates ----------
@@ -220,6 +271,17 @@ export function drawIronShot(ctx, shot) {
 }
 
 export function drawFireShot(ctx, shot) {
+  if (shot.kind === "ink") {
+    // the kraken's ink: a dark wobbling blob with a purple shine
+    ctx.save();
+    const wobble = 1 + Math.sin(shot.life * 20) * 0.12;
+    ctx.fillStyle = "rgba(25,5,30,0.9)";
+    ctx.beginPath(); ctx.ellipse(shot.x, shot.y, 10 * wobble, 10 / wobble, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = "rgba(200,120,230,0.6)";
+    ctx.beginPath(); ctx.arc(shot.x - 3, shot.y - 3, 3, 0, TAU); ctx.fill();
+    ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   const len = 0.12;
@@ -321,6 +383,7 @@ export function drawCompassRadar(ctx, scene) {
 
 // ---------- the flagship plaque ----------
 export function drawFlagshipPlaque(ctx, boss, width) {
+  const label = boss.kraken ? "THE KRAKEN" : "RAIDER FLAGSHIP";
   const w = 380, h = 54, x = (width - w) / 2, y = 8;
   ctx.save();
   // brass frame with pointed ends
@@ -334,7 +397,7 @@ export function drawFlagshipPlaque(ctx, boss, width) {
   plate.addColorStop(0, "#5f7d70"); plate.addColorStop(1, "#33483f");
   ctx.fillStyle = plate; ctx.fillRect(x + 8, y + 5, w - 16, 22);
   ctx.fillStyle = "#e9f1dc"; ctx.font = "700 14px Cinzel, Georgia, serif"; ctx.textAlign = "center";
-  ctx.fillText("RAIDER FLAGSHIP", width / 2, y + 21);
+  ctx.fillText(label, width / 2, y + 21);
   // health bar
   ctx.fillStyle = "#1a0c08"; ctx.fillRect(x + 8, y + 32, w - 16, 14);
   const hp = Math.max(0, boss.hp / boss.maxHp);
