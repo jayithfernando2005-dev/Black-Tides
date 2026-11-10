@@ -14,6 +14,10 @@ import { renderPortrait, openPortraitPicker } from "./portraits.js";
 let myPortrait = { avatar: null, avatarVersion: 0 };
 import { renderAchievementCards } from "./achievementsView.js";
 import { showDaily, leaveDaily } from "./daily.js";
+import { showCaptain, showRivals } from "./captainPage.js";
+import { showAdmin } from "./adminPage.js";
+import { renderRank } from "./rankView.js";
+import { shareBattle } from "./shareCard.js";
 import { showMap, getVoyage, advanceTo, chooseStage, chooseEndless } from "./campaign.js";
 
 let lastVoyage = null;     // the voyage that just ended, for "Play again"
@@ -30,13 +34,16 @@ const SCREENS = {
   settings: "Settings",
   map: "Campaign map",
   daily: "Daily Challenge",
+  captain: "Captain",
+  admin: "Harbour master",
   game: "Battle"
 };
 const OPEN_SCREENS = ["login", "register"];      // screens for people not signed in
 
 // Who is playing: a captain with a username, a guest, or nobody yet.
-const player = { username: null, guest: false, memberSince: null, remember: false };
+const player = { username: null, guest: false, memberSince: null, remember: false, admin: false, rank: null };
 let current = null;
+let routeArg = "";            // the part after the screen name, e.g. the captain in #/captain/Anne
 
 const $ = (id) => document.getElementById(id);
 
@@ -49,6 +56,8 @@ function setPlayer(details) {
   player.guest = details.guest === true;
   player.memberSince = details.memberSince || null;
   player.remember = details.remember === true;
+  player.admin = details.admin === true;
+  player.rank = details.rank || null;
   emit("player:changed", { ...player });
 }
 
@@ -70,7 +79,13 @@ function redirect(name) {
 }
 
 function route() {
-  let name = location.hash.replace("#/", "");
+  const parts = location.hash.replace("#/", "").split("/");
+  let name = parts[0];
+  try {
+    routeArg = decodeURIComponent(parts.slice(1).join("/"));
+  } catch (error) {
+    routeArg = "";
+  }
   if (!SCREENS[name]) {
     return redirect(signedIn() ? "menu" : "login");
   }
@@ -99,7 +114,7 @@ function route() {
 
   const loader = loaders[name];
   if (loader) {
-    loader();
+    loader(routeArg);
   }
   // Move keyboard focus to the new screen's heading, for keyboard and screen-reader users.
   const heading = document.querySelector("#screen-" + name + " h1, #screen-" + name + " h2");
@@ -151,11 +166,31 @@ const loaders = {
     showDaily(player.username);
   },
 
+  captain(name) {
+    if (!name) return redirect("leaderboard");
+    showCaptain(name, player.username);
+  },
+
+  admin() {
+    showAdmin();
+  },
+
   async menu() {
     $("menu-captain").textContent = player.username ? player.username : "Guest";
     $("menu-login").hidden = !player.guest;
     $("menu-logout").hidden = player.guest;
     $("menu-guest-note").hidden = !player.guest;
+    $("menu-rank").textContent = player.rank || "Captain";
+    $("menu-admin").hidden = !player.admin;
+    if (player.username) {
+      // the rank can rise after any battle, so ask again each time the menu opens
+      api.whoAmI().then((me) => {
+        player.rank = me.rank || null;
+        player.admin = me.admin === true;
+        $("menu-rank").textContent = player.rank || "Captain";
+        $("menu-admin").hidden = !player.admin;
+      }).catch(() => {});
+    }
     try {
       const progress = await api.getProgress();
       $("menu-gold").textContent = progress.gold;
@@ -176,6 +211,7 @@ const loaders = {
     $("profile-guest").hidden = !player.guest;
     $("profile-body").hidden = player.guest;
     document.querySelector("#screen-profile [data-nav=achievements]").hidden = player.guest;
+    $("profile-public").hidden = player.guest;
     if (player.guest) return;
     try {
       const [profile, badges] = await Promise.all([api.getProfile(), api.getAchievements()]);
@@ -185,6 +221,8 @@ const loaders = {
       $("profile-since").textContent = "Member since " + formatDate(profile.memberSince);
       $("profile-rank").textContent = profile.rank ? "#" + profile.rank : "Unranked";
       $("profile-gold").textContent = profile.gold;
+      renderRank($("profile-xp"), profile.captainRank);
+      showRivals();
       $("stat-games").textContent = profile.games;
       $("stat-wave").textContent = profile.bestWave;
       $("stat-score").textContent = profile.bestScore;
@@ -235,6 +273,11 @@ const loaders = {
       : "Keeps you logged in for 30 days on this device.";
   }
 };
+
+// "My public page" on the profile.
+$("profile-public").addEventListener("click", () => {
+  if (player.username) go("captain/" + encodeURIComponent(player.username));
+});
 
 // ----- Changing the captain's portrait -----
 function openPicker() {
@@ -298,7 +341,7 @@ $("login-form").addEventListener("submit", async (event) => {
     const result = await api.login(username, password, $("login-remember").checked);
     $("login-form").reset();
     const me = await api.whoAmI();
-    setPlayer({ username: result.username, memberSince: me.memberSince, remember: me.remember });
+    setPlayer({ ...me, username: result.username });
     go("menu");
   } catch (error) {
     showFormError(message, error.message);
@@ -318,7 +361,7 @@ $("register-form").addEventListener("submit", async (event) => {
     const result = await api.register(username, password, $("register-remember").checked);
     $("register-form").reset();
     const me = await api.whoAmI();
-    setPlayer({ username: result.username, memberSince: me.memberSince, remember: me.remember });
+    setPlayer({ ...me, username: result.username });
     go("menu");
   } catch (error) {
     showFormError(message, error.message);
@@ -396,10 +439,21 @@ $("settings-reset").addEventListener("click", () => {
 
 $("quit-button").addEventListener("click", () => go("menu"));
 
+let lastSummary = null;
+// Event: "Download share card" on the end panel.
+$("share-button").addEventListener("click", async () => {
+  if (!lastSummary) return;
+  $("share-button").disabled = true;
+  await shareBattle(lastSummary);
+  $("share-button").disabled = false;
+});
+
 on("battle:over", async (summary) => {
+  lastSummary = summary;
   $("over-wave").textContent = summary.wave;
   $("over-sunk").textContent = summary.sunk;
   $("over-bosses").textContent = summary.bosses;
+  $("over-combo").textContent = summary.bestCombo >= 2 ? summary.bestCombo + " in a row" : "-";
   $("over-solved").textContent = summary.puzzlesSolved;
   $("over-gold").textContent = summary.goldEarned;
   $("over-score").textContent = summary.score;

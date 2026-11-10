@@ -50,6 +50,8 @@ body[data-screen="login"] .brand,
 body[data-screen="register"] .brand,
 body[data-screen="game"] .brand,
 body[data-screen="daily"] .brand,
+body[data-screen="captain"] .brand,
+body[data-screen="admin"] .brand,
 body[data-screen="leaderboard"] .brand,
 body[data-screen="profile"] .brand,
 body[data-screen="settings"] .brand,
@@ -442,6 +444,8 @@ body[data-screen="shipyard"] .scene-bg,
 body[data-screen="howto"] .scene-bg,
 body[data-screen="achievements"] .scene-bg,
 body[data-screen="daily"] .scene-bg,
+body[data-screen="captain"] .scene-bg,
+body[data-screen="admin"] .scene-bg,
 body[data-screen="leaderboard"] .scene-bg { filter: blur(1.5px) brightness(0.7) saturate(1.1); }
 body[data-screen="profile"] .wrap,
 body[data-screen="settings"] .wrap,
@@ -449,6 +453,8 @@ body[data-screen="shipyard"] .wrap,
 body[data-screen="howto"] .wrap,
 body[data-screen="achievements"] .wrap,
 body[data-screen="daily"] .wrap,
+body[data-screen="captain"] .wrap,
+body[data-screen="admin"] .wrap,
 body[data-screen="leaderboard"] .wrap { max-width: 1240px; padding: 0 clamp(12px, 3vw, 40px); }
 .board-screen { min-height: 100vh; align-content: center; justify-items: center; gap: 14px; padding: 64px 0 28px; }
 
@@ -1472,3 +1478,78 @@ body[data-screen="game"] .toasts { bottom: auto; top: 84px; }
 .map-weather { font-size: 0.85rem; color: #e8dcbc; padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,0.3); box-shadow: inset 0 0 0 1px rgba(143,211,255,0.45); }
 .map-weather::before { content: "☁ "; color: #8fd3ff; }
 .map-weather b { color: #f3d48a; }
+
+/* ===== Upgrade: ranks, captain pages, rivals, admin, save files, share cards ===== */
+
+/* menu: Harbour master + Log out side by side */
+.menu-small-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+.pill-admin .pill-face { background: linear-gradient(180deg, #7a5a2a 0%, #5a3f18 55%, #3e2a0e 100%); }
+
+/* rank title and XP bar */
+.xp-box { width: 100%; display: grid; justify-items: center; gap: 4px; margin: 6px 0 4px; }
+.xp-box:empty { display: none; }
+.xp-title { font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: 1.25rem; letter-spacing: 0.04em; color: #f3d48a; text-shadow: 0 2px 0 #1a120c; }
+.xp-level { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: #c9b896; }
+.xp-track { width: 100%; height: 12px; border-radius: 999px; overflow: hidden; background: #1a120c; box-shadow: inset 0 0 0 1px #7a5a2a, inset 0 2px 4px rgba(0,0,0,0.6); }
+.xp-track i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(180deg, #fff0b0, #e2b13e 55%, #a8742a); box-shadow: 0 0 8px rgba(243,212,138,0.6); transition: width 0.8s ease; }
+.xp-text { font-size: 0.78rem; color: #e6d8b8; }
+
+/* leaderboard: names open the captain page */
+.captain-link { display: grid; justify-items: start; min-height: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.captain-link:hover b, .captain-link:focus-visible b { color: #ffd36b; text-decoration: underline; text-underline-offset: 3px; }
+.captain-link:hover:not(:disabled) { border: 0; }
+
+/* captain page */
+.cap-message { min-height: 1.2em; margin: -8px 0 10px; text-align: center; font-family: "Cinzel", Georgia, serif; font-weight: 700; color: #bff0c8; }
+.cap-me-note { margin: 6px 0 0; font-size: 0.85rem; color: #d9c8a4; text-align: center; }
+#screen-captain .porthole { cursor: default; }
+#cap-rival { margin-top: 8px; }
+
+/* rivals panel */
+.rivals-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.rival-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.25); }
+.rival-row .portrait { width: 44px; height: 44px; }
+.rival-name { display: grid; justify-items: start; min-height: 0; padding: 0; border: 0; background: none; text-align: left; color: #f1e2bd; cursor: pointer; }
+.rival-name b { font-size: 1rem; }
+.rival-name small { font-size: 0.75rem; color: #c9b896; }
+.rival-diff { font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 0.85rem; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.rival-diff.ahead { color: #12351f; background: #8ff0c4; }
+.rival-diff.behind { color: #3a0d08; background: #ff9a8a; }
+.rival-diff.level { color: #2a1d08; background: #f3d48a; }
+.rivals-empty { margin: 8px 0 0; font-size: 0.88rem; color: #d9c8a4; }
+.rivals-list:not(:empty) + .rivals-empty { display: none; }
+.rival-form { display: flex; gap: 10px; margin-top: 10px; }
+.rival-form input { flex: 1; min-width: 0; }
+.rival-form .plaque-button { white-space: nowrap; }
+.rival-message { min-height: 1.2em; margin: 6px 0 0; font-size: 0.88rem; color: #bff0c8; }
+/* the profile's two plaques hang on the bottom edge of the frame, like the Settings buttons */
+.profile-actions .plaque-button { position: static; transform: none; }
+
+/* admin page */
+.admin-intro { margin: 0 0 12px; color: #e6d8b8; }
+.admin-intro b { color: #f3d48a; }
+.admin-table-wrap { display: block; overflow-x: auto; padding: 8px 10px; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #2e1c08; }
+.admin-table th { text-align: left; padding: 8px; font-family: "Cinzel", Georgia, serif; font-weight: 900; border-bottom: 2px solid #8a6a3a; white-space: nowrap; }
+.admin-table td { padding: 7px 8px; border-bottom: 1px solid rgba(138,106,58,0.35); vertical-align: middle; }
+.admin-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-table .link { color: #5a2a08; font-weight: 700; }
+.admin-tag { margin-left: 6px; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; color: #fff; background: #7a1a16; }
+.admin-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-action { min-height: 30px; padding: 3px 10px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #8a6a3a; background: #f6e8c6; color: #3a2508; cursor: pointer; }
+.admin-action:hover:not(:disabled) { background: #fff3d6; }
+.admin-action.armed { background: #a62a22; color: #fff; border-color: #6b1410; }
+.admin-rename { display: flex; gap: 6px; }
+.admin-rename input { width: 140px; min-height: 30px; padding: 2px 8px; }
+.admin-message { min-height: 1.3em; margin: 10px 0 0; font-weight: 700; color: #bff0c8; }
+
+/* settings: save file row */
+.save-row { flex-wrap: wrap; }
+.save-label { display: grid; font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: clamp(1rem, 1.6vw, 1.2rem); color: #2e1c08; }
+.save-label small { font-family: inherit; font-weight: 400; font-size: 0.8rem; color: #5a4020; }
+.save-buttons { display: flex; gap: 10px; }
+.save-buttons .plaque-button { min-height: 40px !important; padding: 4px 16px !important; font-size: 0.9rem !important; text-decoration: none; cursor: pointer; }
+
+/* end panel share button and daily share button */
+#daily-share { margin-top: 14px; }
+.admin-protected { font-size: 0.8rem; font-style: italic; color: #6b5030; }

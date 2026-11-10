@@ -10,6 +10,7 @@ import "./mapScene.js";
 import "./music.js";
 import "./portraits.js";
 import "./liveFeed.js";
+import "./saveFile.js";
 import { loadMenuScene } from "./menuScene.js";
 
 await runSplash([loadMenuScene]);   // the loading screen first, like a real game

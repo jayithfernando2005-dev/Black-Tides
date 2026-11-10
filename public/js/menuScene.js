@@ -56,7 +56,7 @@ export function loadMenuScene() {
 }
 
 // Event: a screen was shown. The scene plays behind the main menu and the screens opened from it.
-const SCENE_SCREENS = ["menu", "daily", "howto", "shipyard", "leaderboard", "profile", "achievements", "settings"];
+const SCENE_SCREENS = ["menu", "daily", "captain", "admin", "howto", "shipyard", "leaderboard", "profile", "achievements", "settings"];
 on("screen:shown", (name) => {
   if (SCENE_SCREENS.includes(name)) {
     canvas.classList.add("on");

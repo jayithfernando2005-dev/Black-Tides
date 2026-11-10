@@ -12,6 +12,9 @@ const avatarRoutes = require("./avatarRoutes").router;
 const dailyRoutes = require("./dailyRoutes");
 const liveRoutes = require("./liveEvents").router;
 const weatherRoutes = require("./weatherRoutes");
+const captainRoutes = require("./captainRoutes").router;
+const adminRoutes = require("./adminRoutes");
+const saveRoutes = require("./saveRoutes");
 
 const app = express();
 
@@ -44,5 +47,8 @@ app.use("/api", avatarRoutes);
 app.use("/api", dailyRoutes);
 app.use("/api", liveRoutes);
 app.use("/api", weatherRoutes);
+app.use("/api", captainRoutes);
+app.use("/api", adminRoutes);
+app.use("/api", saveRoutes);
 
 module.exports = app;

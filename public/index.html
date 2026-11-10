@@ -122,7 +122,7 @@
       <div class="menu-top">
         <div class="captain-badge">
           <span class="captain-emblem" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a2.5 2.5 0 0 1 1 4.8V9h3v2h-3v8.9c2.6-.4 4.6-2.2 5.3-4.6L16 16l3.5-4 2.5 5-1.9-.6C19.1 20 15.9 22.5 12 22.5S4.9 20 3.9 16.4L2 17l2.5-5L8 16l-2.3-.7c.7 2.4 2.7 4.2 5.3 4.6V11H8V9h3V6.8A2.5 2.5 0 0 1 12 2Zm0 1.6a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z" fill="currentColor"/></svg></span>
-          <div><span class="label">Captain</span><b id="menu-captain">Guest</b></div>
+          <div><span class="label" id="menu-rank">Captain</span><b id="menu-captain">Guest</b></div>
         </div>
         <!-- js/liveFeed.js fills this from the server's live "online" events -->
         <div class="online-badge" id="menu-online" hidden><i aria-hidden="true"></i><b>1</b> <span>captain at sea</span></div>
@@ -146,8 +146,11 @@
           <button type="button" class="pill" data-nav="howto"><span class="pill-face">How to play</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
           <button type="button" class="pill" data-nav="settings"><span class="pill-face">Settings</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
         </div>
+        <div class="menu-small-row">
+        <button type="button" class="pill pill-small pill-admin" id="menu-admin" data-nav="admin" hidden><span class="pill-face">Harbour master</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
         <button type="button" class="pill pill-small" id="menu-logout"><span class="pill-face">Log out</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
         <button type="button" class="pill pill-small" id="menu-login" hidden><span class="pill-face">Log in</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
+        </div>
         <p class="menu-note" id="menu-guest-note" hidden>Playing as a guest: gold and upgrades last until you close the browser, and scores are not saved.</p>
       </nav>
     </section>
@@ -387,6 +390,7 @@
               <h2>Challenge complete</h2>
               <p class="daily-result"><b id="daily-result-time">-</b><span id="daily-result-rank"></span></p>
               <p id="daily-result-note"></p>
+              <button type="button" class="plaque-button action-plaque" id="daily-share">Download share card</button>
             </div>
             <!-- guests -->
             <div id="daily-guest" hidden>
@@ -402,6 +406,64 @@
             <ol class="daily-board" id="daily-board"></ol>
             <p class="daily-empty" id="daily-empty">Nobody has finished today's challenge yet. Be the first!</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== A CAPTAIN'S PUBLIC PAGE (#/captain/Name) ========== -->
+    <section class="screen board-screen profile-screen" id="screen-captain" hidden>
+      <div class="board-frame profile-frame">
+        <div class="frame-header">
+          <h1 class="engraved" id="cap-name">Captain</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="leaderboard">Leaderboard</button>
+        </div>
+        <p class="cap-message" id="cap-message" role="status"></p>
+        <div class="profile-layout" id="cap-body" hidden>
+          <aside class="captain-card">
+            <span class="porthole"><span class="porthole-glass" id="cap-portrait"></span></span>
+            <p class="captain-since" id="cap-since">Member since -</p>
+            <div class="xp-box" id="cap-rank"></div>
+            <dl class="captain-facts">
+              <dt>Leaderboard</dt><dd><span class="rank-tag" id="cap-place">-</span></dd>
+            </dl>
+            <button type="button" class="plaque-button header-plaque" id="cap-rival" hidden>Mark as rival</button>
+            <p class="cap-me-note" id="cap-me-note" hidden>This is how other captains see you.</p>
+          </aside>
+          <div class="profile-main">
+            <div class="stat-plaques">
+              <div class="stat-plaque"><span class="stat-label">Battles played</span><span class="stat-window"><b id="cap-games">0</b></span></div>
+              <div class="stat-plaque"><span class="stat-label">Best score</span><span class="stat-window"><b id="cap-score">0</b></span></div>
+              <div class="stat-plaque"><span class="stat-label">Best wave</span><span class="stat-window"><b id="cap-wave">0</b></span></div>
+              <div class="stat-plaque"><span class="stat-label">Ships sunk</span><span class="stat-window"><b id="cap-sunk">0</b></span></div>
+              <div class="stat-plaque"><span class="stat-label">Campaign stages</span><span class="stat-window"><b id="cap-stages">0</b></span></div>
+              <div class="stat-plaque"><span class="stat-label">Best daily time</span><span class="stat-window"><b id="cap-daily">-</b></span></div>
+            </div>
+            <div class="medal-panel">
+              <div class="medal-head"><h3>Achievements</h3><span id="cap-badge-count"></span></div>
+              <div class="medal-grid" id="cap-badges"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== HARBOUR MASTER (ADMIN) ========== -->
+    <section class="screen board-screen admin-screen" id="screen-admin" hidden>
+      <div class="board-frame">
+        <div class="frame-header">
+          <h1 class="engraved">Harbour Master</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="menu">Main menu</button>
+        </div>
+        <p class="guest-plate" id="admin-denied" hidden></p>
+        <div id="admin-body" hidden>
+          <p class="admin-intro"><b id="admin-total">-</b> · Rename a captain with a bad name, reset their progress, or remove an account. Admin accounts are protected.</p>
+          <div class="admin-table-wrap parchment">
+            <table class="admin-table">
+              <thead><tr><th>Captain</th><th>Joined</th><th class="num">Battles</th><th class="num">Best</th><th class="num">Gold</th><th class="num">Stages</th><th>Last played</th><th>Actions</th></tr></thead>
+              <tbody id="admin-rows"></tbody>
+            </table>
+          </div>
+          <p class="admin-message" id="admin-message" role="status"></p>
         </div>
       </div>
     </section>
@@ -431,6 +493,7 @@
             <button type="button" class="plaque-button header-plaque change-portrait" id="change-portrait">Change portrait</button>
             <h2 class="captain-title" id="profile-name">-</h2>
             <p class="captain-since" id="profile-since">Member since -</p>
+            <div class="xp-box" id="profile-xp"></div>
             <dl class="captain-facts">
               <dt>Rank</dt><dd><span class="rank-tag" id="profile-rank">-</span></dd>
               <dt>Gold</dt><dd><span class="coin-stack" aria-hidden="true"><i></i><i></i><i></i></span><b class="gold-amount" id="profile-gold">0</b></dd>
@@ -449,10 +512,24 @@
               <div class="medal-head"><h3>Achievements</h3><span id="profile-badge-count"></span></div>
               <div class="medal-grid" id="profile-badges"></div>
             </div>
+            <!-- Rivals (js/captainPage.js) -->
+            <div class="medal-panel rivals-panel">
+              <div class="medal-head"><h3>Rivals</h3><span id="rivals-count"></span></div>
+              <ul class="rivals-list" id="rivals-list"></ul>
+              <p class="rivals-empty" id="rivals-empty">No rivals yet. Open a captain from the leaderboard and press "Mark as rival", or type a name here.</p>
+              <form class="rival-form" id="rival-form">
+                <input id="rival-name" maxlength="20" placeholder="Captain's name" aria-label="Captain's name" autocomplete="off">
+                <button type="submit" class="plaque-button header-plaque">Add rival</button>
+              </form>
+              <p class="rival-message" id="rival-message" role="status"></p>
+            </div>
           </div>
         </div>
 
-        <button type="button" class="plaque-button" data-nav="achievements">View all achievements</button>
+        <div class="frame-actions profile-actions">
+          <button type="button" class="plaque-button action-plaque" data-nav="achievements">View all achievements</button>
+          <button type="button" class="plaque-button action-plaque" id="profile-public">My public page</button>
+        </div>
 
         <!-- Change portrait window (js/portraits.js) -->
         <div class="avatar-picker" id="avatar-picker" role="dialog" aria-modal="true" aria-labelledby="avatar-title" hidden>
@@ -584,6 +661,15 @@
           <fieldset class="parchment account-panel">
             <legend class="ribbon-label iron">Account</legend>
             <div class="parchment-row"><label for="set-stay">Stay logged in on this device<small id="set-stay-note"></small></label><input class="iron-check" id="set-stay" type="checkbox"></div>
+            <div class="parchment-row save-row">
+              <span class="save-label">Save file<small>Your gold, upgrades and campaign, as a signed JSON file</small></span>
+              <span class="save-buttons">
+                <a class="plaque-button header-plaque" id="save-download" href="/api/save" download>Download</a>
+                <label class="plaque-button header-plaque" for="save-file">Load</label>
+                <input id="save-file" type="file" accept="application/json,.json" class="sr-only">
+              </span>
+            </div>
+            <p class="parchment-status" id="save-message" role="status"></p>
             <p class="parchment-note">Sound and play settings are saved in a cookie on this device. The login cookie is separate, and page scripts cannot read it.</p>
             <p class="parchment-status" id="settings-message" role="status"></p>
           </fieldset>
@@ -665,7 +751,8 @@
           <dl class="sum">
             <dt>Wave reached</dt><dd id="over-wave">1</dd>
             <dt>Ships sunk</dt><dd id="over-sunk">0</dd>
-            <dt>Flagships sunk</dt><dd id="over-bosses">0</dd>
+            <dt>Bosses sunk</dt><dd id="over-bosses">0</dd>
+            <dt>Best combo</dt><dd id="over-combo">0</dd>
             <dt>Sonar puzzles solved</dt><dd id="over-solved">0</dd>
             <dt>Gold earned</dt><dd id="over-gold">0</dd>
             <dt>Score</dt><dd id="over-score">0</dd>
@@ -678,6 +765,7 @@
             <button type="button" data-nav="map">Campaign map</button>
             <button type="button" data-nav="leaderboard">Leaderboard</button>
             <button type="button" data-nav="menu">Main menu (M)</button>
+            <button type="button" id="share-button">Download share card</button>
           </div>
         </div>
       </div>

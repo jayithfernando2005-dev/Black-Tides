@@ -89,4 +89,17 @@ db.exec(`
   )
 `);
 
+// Rivals: captains a player has chosen to keep an eye on.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rivals (
+    user_id  INTEGER NOT NULL REFERENCES users(id),
+    rival_id INTEGER NOT NULL REFERENCES users(id),
+    added_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, rival_id)
+  )
+`);
+// Roles: "captain" for everyone, "admin" for the people who look after the game
+// (made with: npm run make-admin -- <username>).
+addColumnIfMissing("users", "role", "TEXT NOT NULL DEFAULT 'captain'");
+
 module.exports = db;

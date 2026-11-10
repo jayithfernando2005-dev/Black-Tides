@@ -157,3 +157,47 @@ export function answerDaily(fish, chest) {
 export function getWeather(city) {
   return getJson("/api/weather?city=" + encodeURIComponent(city));
 }
+
+// ----- Captain pages, rivals, ranks -----
+
+// A captain's public page: { username, rank, bestScore, achievements, isRival, ... }.
+export function getCaptain(name) {
+  return getJson("/api/captains/" + encodeURIComponent(name));
+}
+
+export function getRivals() {
+  return getJson("/api/rivals");
+}
+
+export function addRival(name) {
+  return postJson("/api/rivals", { username: name });
+}
+
+export function removeRival(name) {
+  return request("/api/rivals/" + encodeURIComponent(name), { method: "DELETE" });
+}
+
+// ----- Admin (harbour master) -----
+
+export function adminCaptains() {
+  return getJson("/api/admin/captains");
+}
+
+export function adminReset(name, scores) {
+  return postJson("/api/admin/captains/" + encodeURIComponent(name) + "/reset", { scores: scores === true });
+}
+
+export function adminRename(name, newName) {
+  return postJson("/api/admin/captains/" + encodeURIComponent(name) + "/rename", { newName: newName });
+}
+
+export function adminRemove(name) {
+  return request("/api/admin/captains/" + encodeURIComponent(name), { method: "DELETE" });
+}
+
+// ----- Save files -----
+
+// The save file itself is downloaded straight from /api/save (a normal link).
+export function importSave(save) {
+  return postJson("/api/save/import", { save: save });
+}
