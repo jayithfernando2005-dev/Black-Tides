@@ -217,7 +217,7 @@ export function drawBattle(ctx, scene) {
       if (raider.kraken) drawKraken(ctx, raider, scene.time);
       else art.drawPaintedRaider(ctx, raider, scene.time);
     }
-    if (scene.shipAfloat) art.drawPaintedPlayer(ctx, ship, scene.time, scene.shipFlash);
+    if (scene.shipAfloat) art.drawPaintedPlayer(ctx, ship, scene.time, scene.shipFlash, scene.look);
     for (const shot of scene.enemyShots) art.drawFireShot(ctx, shot);
     for (const shot of scene.shots) art.drawIronShot(ctx, shot);
   }
@@ -344,9 +344,14 @@ export function drawBattle(ctx, scene) {
     }
     ctx.globalAlpha = 1;
   }
+  if (scene.specials) drawShotTray(ctx, scene.specials, width, height);
   if (scene.combo && scene.combo.count >= 2) drawCombo(ctx, scene.combo, width, scene.boss ? 72 : 16);
-  if (art.ready("radar")) art.drawCompassRadar(ctx, scene);
-  else drawRadar(ctx, scene);
+  // the radar is hidden only when the touch joystick is sitting on top of it
+  const body = document.body.classList;
+  if (!(body.contains("touch-play") && body.contains("touch-overlay"))) {
+    if (art.ready("radar")) art.drawCompassRadar(ctx, scene);
+    else drawRadar(ctx, scene);
+  }
 }
 
 // The combo counter in the top-right corner, with a bar that empties as time runs out.
@@ -372,5 +377,45 @@ function drawCombo(ctx, combo, width, top) {
   ctx.fillRect(x - 150, top + 58, 150, 6);
   ctx.fillStyle = "#ffd36b";
   ctx.fillRect(x - 150 * combo.timeLeft, top + 58, 150 * combo.timeLeft, 6);
+  ctx.restore();
+}
+
+// The shot tray at the bottom middle: iron (always), chain, fire and broadside with how many
+// are loaded. The chosen one glows. Keys 1-4 choose, Q cycles.
+const TRAY = [
+  { kind: "iron", key: "1", label: "Iron", colour: "#cfd6dc" },
+  { kind: "chain", key: "2", label: "Chain", colour: "#9fc8ff" },
+  { kind: "fire", key: "3", label: "Fire", colour: "#ffab3d" },
+  { kind: "broadside", key: "4", label: "Broadside", colour: "#ffe08a" }
+];
+function drawShotTray(ctx, specials, width, height) {
+  const slot = 84, gap = 8;
+  const total = TRAY.length * slot + (TRAY.length - 1) * gap;
+  let x = (width - total) / 2;
+  const y = height - 50;
+  ctx.save();
+  ctx.textAlign = "center";
+  for (const item of TRAY) {
+    const count = item.kind === "iron" ? "∞" : String(specials[item.kind]);
+    const empty = item.kind !== "iron" && specials[item.kind] === 0;
+    const chosen = specials.selected === item.kind;
+    ctx.globalAlpha = empty ? 0.4 : 1;
+    ctx.fillStyle = chosen ? "rgba(60,40,12,0.92)" : "rgba(14,10,6,0.72)";
+    ctx.strokeStyle = chosen ? item.colour : "rgba(201,166,94,0.6)";
+    ctx.lineWidth = chosen ? 3 : 1.5;
+    ctx.beginPath();
+    ctx.roundRect(x, y, slot, 38, 6);
+    ctx.fill(); ctx.stroke();
+    ctx.font = "700 11px Cinzel, Georgia, serif";
+    ctx.fillStyle = "rgba(243,230,200,0.7)";
+    ctx.fillText(item.key, x + 10, y + 14);
+    ctx.font = "700 13px Cinzel, Georgia, serif";
+    ctx.fillStyle = item.colour;
+    ctx.fillText(item.label, x + slot / 2, y + 16);
+    ctx.font = "700 14px 'Share Tech Mono', monospace";
+    ctx.fillStyle = "#f3e6c8";
+    ctx.fillText(count, x + slot / 2, y + 32);
+    x += slot + gap;
+  }
   ctx.restore();
 }

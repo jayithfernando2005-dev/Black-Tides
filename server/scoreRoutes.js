@@ -3,6 +3,8 @@
 const express = require("express");
 const { publish } = require("./liveEvents");
 const { rankOf } = require("./ranks");
+const { recordQuestStats } = require("./quests");
+const { tournament } = require("./weekly");
 const { rivalsPassed } = require("./captainRoutes");
 const requireLogin = require("./requireLogin");
 const { saveScore, getRecord, getLeaderboard, getRank } = require("./scores");
@@ -10,6 +12,7 @@ const { listAchievements } = require("./achievements");
 const { loadProgress } = require("./progress");
 const { findUserById } = require("./users");
 const { avatarInfo } = require("./avatarRoutes");
+const { shipInfo } = require("./shipRoutes");
 
 const router = express.Router();
 
@@ -34,11 +37,14 @@ router.post("/scores", requireLogin, (req, res) => {
     bosses: Number(req.body.bosses),
     goldEarned: Number(req.body.goldEarned),
     underFire: req.body.underFire === true,
-    untouched: req.body.untouched === true
+    untouched: req.body.untouched === true,
+    stage: Number(req.body.stage || 0),
+    difficulty: ["easy", "normal", "hard"].includes(req.body.difficulty) ? req.body.difficulty : "normal",
+    bestCombo: Number(req.body.bestCombo || 0)
   };
   const valid = isWholeNumber(result.score, 1000000) && isWholeNumber(result.wave, 1000) &&
     isWholeNumber(result.sunk, 10000) && isWholeNumber(result.bosses, 1000) &&
-    isWholeNumber(result.goldEarned, 1000000);
+    isWholeNumber(result.goldEarned, 1000000) && isWholeNumber(result.stage, 9) && isWholeNumber(result.bestCombo, 10000);
   if (!valid) {
     return res.status(400).json({ error: "That score does not look right." });
   }
@@ -66,11 +72,20 @@ router.post("/scores", requireLogin, (req, res) => {
     }
   }
 
+  // Daily quests: this battle's numbers count towards today's quests.
+  const extra = req.body.questStats && typeof req.body.questStats === "object" ? req.body.questStats : {};
+  const small = (value) => (isWholeNumber(Number(value), 10000) ? Number(value) : 0);
+  const questsCompleted = recordQuestStats(req.session.userId, {
+    sunk: result.sunk, bosses: result.bosses, wave: result.wave, score: result.score, bestCombo: result.bestCombo,
+    cutters: small(extra.cutters), ironclads: small(extra.ironclads), escorts: small(extra.escorts), specialsUsed: small(extra.specialsUsed)
+  });
+
   const all = listAchievements(req.session.userId, loadProgress(req));
   const newlyUnlocked = all.filter((a) => a.unlocked && !before.includes(a.key)).map((a) => a.name);
   res.json({
     saved: true,
     personalBest: personalBest,
+    questsCompleted: questsCompleted,
     newAchievements: newlyUnlocked
   });
 });
@@ -95,7 +110,8 @@ router.get("/profile", requireLogin, (req, res) => {
     gold: progress.gold,
     rank: getRank(req.session.userId),
     captainRank: rankOf(req.session.userId),
-    ...avatarInfo(user)
+    ...avatarInfo(user),
+    ...shipInfo(user)
   });
 });
 
@@ -108,6 +124,11 @@ router.get("/achievements", requireLogin, (req, res) => {
 router.get("/leaderboard", (req, res) => {
   const period = req.query.period === "week" ? "week" : "all";
   res.json(getLeaderboard(period, 10).map((row) => ({ ...row, title: rankOf(row.userId).title, userId: undefined })));
+});
+
+// GET /api/tournament - this week's tournament: its name, time left and last week's champion.
+router.get("/tournament", (req, res) => {
+  res.json(tournament());
 });
 
 module.exports = router;

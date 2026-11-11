@@ -7,6 +7,7 @@ const requireLogin = require("./requireLogin");
 const daily = require("./daily");
 const { loadProgress, saveProgress } = require("./progress");
 const { publish } = require("./liveEvents");
+const { recordQuestStats } = require("./quests");
 
 const router = express.Router();
 
@@ -80,6 +81,7 @@ router.post("/daily/answer", requireLogin, (req, res) => {
   saveProgress(req, progress);
 
   const rank = daily.getDailyRank(day, seconds);
+  recordQuestStats(req.session.userId, { daily: 1 });          // daily quests
   publish("daily:solved", { username: req.session.username, seconds: seconds, rank: rank });
   res.json({
     correct: true,

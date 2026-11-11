@@ -105,6 +105,12 @@ export function spawnBoss(width, height, wave) {
 // Sails every raider towards our ship, circles at a distance, and fires.
 export function updateRaiders(seconds, ship, width, height) {
   for (const raider of raiders) {
+    // special shot effects wear off over time; a fire keeps burning the hull
+    if (raider.slow > 0) raider.slow -= seconds;
+    if (raider.burn > 0) {
+      raider.burn -= seconds;
+      raider.hp -= 0.9 * seconds;
+    }
     if (raider.kraken) {
       updateKraken(raider, seconds, ship, width);
       continue;
@@ -120,8 +126,10 @@ export function updateRaiders(seconds, ship, width, height) {
       moveX = (-dy / distance) * raider.side;
       moveY = (dx / distance) * raider.side;
     }
-    raider.x += moveX * raider.speed * seconds;
-    raider.y += moveY * raider.speed * seconds;
+    // chain shot tore the sails: half speed for a while
+    const slowed = raider.slow > 0 ? 0.45 : 1;
+    raider.x += moveX * raider.speed * slowed * seconds;
+    raider.y += moveY * raider.speed * slowed * seconds;
     raider.angle = Math.atan2(dy, dx);              // always faces our ship
 
     // Once inside the sea, a raider stays inside it.
@@ -160,12 +168,23 @@ export function checkHits(shots) {
         raider.flash = 0.12;
         removeShot(shot);
         hits += 1;
-        if (raider.hp <= 0) {
-          sunk.push({ x: raider.x, y: raider.y, boss: raider.boss, type: raider.type });
+        if (shot.kind === "chain") raider.slow = 4;            // sails torn: slow for 4 s
+        if (shot.kind === "fire") {
+          raider.burn = 3;                                     // burns for 3 s
+          for (const other of raiders) {                       // the flames splash nearby ships
+            if (other !== raider && Math.hypot(other.x - raider.x, other.y - raider.y) < 80) {
+              other.hp -= 1;
+              other.burn = Math.max(other.burn || 0, 1.5);
+            }
+          }
         }
         break;
       }
     }
+  }
+  // every ship at 0 is sunk, including ones caught in a fire shot's splash
+  for (const raider of raiders) {
+    if (raider.hp <= 0) sunk.push({ x: raider.x, y: raider.y, boss: raider.boss, type: raider.type });
   }
   raiders = raiders.filter((raider) => raider.hp > 0);
   return { hits: hits, sunk: sunk };

@@ -1,5 +1,7 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // puzzleRoutes.js - the web addresses the game calls for sonar puzzles.
 const express = require("express");
+const { recordQuestStats } = require("./quests");
 const { getFishPuzzle } = require("./fishApi");
 const { loadProgress, saveProgress } = require("./progress");
 
@@ -43,6 +45,7 @@ router.post("/puzzle/answer", (req, res) => {
   progress.puzzlesTried += 1;
   if (fishCorrect) {
     progress.puzzlesSolved += 1;
+    if (req.session.userId) recordQuestStats(req.session.userId, { puzzles: 1 });   // daily quests
     progress.streak += 1;
     progress.bestStreak = Math.max(progress.bestStreak, progress.streak);
   } else {

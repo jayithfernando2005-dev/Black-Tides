@@ -8,16 +8,23 @@ const SHIP_RADIUS = 18;           // how close a cannonball must be to hit our s
 let shots = [];
 let enemyShots = [];
 
-// Fires one cannonball from the front of the ship, in the direction it faces.
-export function fireShot(ship, damage) {
-  shots.push({
-    x: ship.x + Math.cos(ship.angle) * 26,
-    y: ship.y + Math.sin(ship.angle) * 26,
-    vx: Math.cos(ship.angle) * SHOT_SPEED,
-    vy: Math.sin(ship.angle) * SHOT_SPEED,
-    life: SHOT_LIFE,
-    damage: damage
-  });
+// Fires from the front of the ship, in the direction it faces.
+// kind: "iron" (normal), "chain" (slows the ship it hits), "fire" (sets it burning and
+// splashes the ships nearby) or "broadside" (five cannonballs in a fan).
+export function fireShot(ship, damage, kind = "iron") {
+  const angles = kind === "broadside" ? [-0.3, -0.15, 0, 0.15, 0.3] : [0];
+  for (const turn of angles) {
+    const angle = ship.angle + turn;
+    shots.push({
+      x: ship.x + Math.cos(angle) * 26,
+      y: ship.y + Math.sin(angle) * 26,
+      vx: Math.cos(angle) * SHOT_SPEED,
+      vy: Math.sin(angle) * SHOT_SPEED,
+      life: SHOT_LIFE,
+      damage: damage,
+      kind: kind === "broadside" ? "iron" : kind
+    });
+  }
 }
 
 // A raider fires a cannonball at an angle.

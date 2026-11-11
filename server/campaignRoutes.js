@@ -3,6 +3,7 @@
 // may play and when a stage counts as won, so the browser cannot skip ahead.
 const express = require("express");
 const { publish } = require("./liveEvents");
+const { recordQuestStats } = require("./quests");
 const { STAGES, SECONDS_PER_WAVE, getStage, rewardFor } = require("./campaign");
 const { loadProgress, saveProgress } = require("./progress");
 
@@ -52,6 +53,7 @@ router.post("/campaign/complete", (req, res) => {
   progress.gold += reward;
   saveProgress(req, progress);
 
+  recordQuestStats(req.session.userId, { stage: 1 });           // daily quests: any stage win counts
   if (firstClear) {
     publish("stage:cleared", { username: req.session.username, stage: stage.id, stageName: stage.name });
   }

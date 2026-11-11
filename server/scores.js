@@ -5,10 +5,10 @@ const db = require("./db");
 // Saves the result of one battle for a captain.
 function saveScore(userId, r) {
   db.prepare(`
-    INSERT INTO scores (user_id, score, wave, sunk, bosses, gold_earned, under_fire, untouched, played_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO scores (user_id, score, wave, sunk, bosses, gold_earned, under_fire, untouched, stage, difficulty, best_combo, played_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(userId, r.score, r.wave, r.sunk, r.bosses, r.goldEarned,
-    r.underFire ? 1 : 0, r.untouched ? 1 : 0, new Date().toISOString());
+    r.underFire ? 1 : 0, r.untouched ? 1 : 0, r.stage || 0, r.difficulty || "normal", r.bestCombo || 0, new Date().toISOString());
 }
 
 // One captain's record across every battle they have finished.
@@ -28,11 +28,9 @@ function getRecord(userId) {
 
 // The top captains: each captain's best score and best wave, highest score first,
 // plus how many ships and flagships they have sunk (for the achievement column).
-// period "week" only counts battles from the last 7 days.
+// period "week" is the weekly tournament: only battles since Monday 00:00 count.
 function getLeaderboard(period, limit) {
-  const since = period === "week"
-    ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    : "";
+  const since = period === "week" ? require("./weekly").weekStart().toISOString() : "";
   return db.prepare(`
     SELECT users.username AS username,
            users.id AS userId,

@@ -3,10 +3,12 @@
 // bosses, storms, power-ups, pausing, and the end of the battle.
 // It talks to the screens only through events (battle:start, battle:over, ...).
 import { drawBattle } from "./renderer.js";
-import { isDown, getMouse, watchMouse, isTyping } from "./input.js";
+import { isDown, getMouse, watchMouse, isTyping, getVirtualMove } from "./input.js";
 import { fireShot, updateShots, checkPlayerHit, clearShots, getShots, getEnemyShots } from "./shots.js";
 import { spawnRaider, spawnBoss, spawnKraken, updateRaiders, checkHits, removeWrecks, clearRaiders, getRaiders, getBoss, REWARDS } from "./enemies.js";
 import { updateSlams, clearSlams } from "./hazards.js";
+import { getDifficulty, difficultyKey, applyDifficulty } from "./difficulty.js";
+import { getMyShip } from "./shipLook.js";
 import { planEvent, updateEvent, clearEvent, forceEvent, EVENT_INFO } from "./seaEvents.js";
 import { POWERUPS, updatePowerups, getCrates, clearPowerups } from "./powerups.js";
 import { explode, foam, addShake, updateEffects, getEffects, getShake, clearEffects } from "./effects.js";
@@ -40,6 +42,9 @@ const POINTS = { reload: 50 };          // points and gold for each ship type ar
 const GOLD = { chest: 25 };
 const COMBO_SECONDS = 3;                // sink the next ship within 3 s to keep the combo going
 const SEA_EVENT_CHANCE = 0.4;           // chance of a sea event in a wave (from wave 2)
+// Special cannon shots, earned by solving sonar puzzles (keys 1-4 or Q to choose).
+export const SHOT_KINDS = ["iron", "chain", "fire", "broadside"];
+const SHOT_NAMES = { iron: "Iron shot", chain: "Chain shot", fire: "Fire shot", broadside: "Broadside" };
 const CHEST_PENALTY = 10;          // hull lost for a wrong chest count
 
 // state is one of: idle, loading, playing, paused, clearing, shipyard, over
@@ -90,7 +95,10 @@ async function startBattle(voyage) {
     weather: null,                             // real weather for the Endless voyage (Open-Meteo)
     combo: { count: 0, timer: 0, multiplier: 1, pop: 0 }, bestCombo: 0,
     popups: [],                                // floating "+150" texts
-    seaEvents: 0, escorts: 0
+    seaEvents: 0, escorts: 0,
+    specials: { chain: 0, fire: 0, broadside: 0 }, selected: "iron", specialsUsed: 0,
+    typeSunk: { cutter: 0, ironclad: 0 },
+    difficulty: difficultyKey()               // fixed for the whole battle
   };
   say("Preparing your ship...");
   let progress = { gold: 0 };
@@ -128,7 +136,9 @@ async function startBattle(voyage) {
   startWave(1);
   state = "playing";
   startAmbience();
-  say("Steer, aim with the mouse, click to fire. Press R for the sonar when you run low.");
+  say(document.body.classList.contains("touch-play")
+    ? "Steer with the joystick, touch the sea to aim and fire. Pull the sonar lever when you run low."
+    : "Steer, aim with the mouse, click to fire. Press R for the sonar when you run low.");
   canvas.focus();
 }
 
@@ -189,6 +199,7 @@ function startWave(number) {
   run.spawnQueue = [];
   if (krakenWave) {
     spawnKraken(W, H, run.toughness);
+    setTimeout(() => emit("kraken:rose"), 900);
   } else if (bossWave) {
     spawnBoss(W, H, run.toughness);
   }
@@ -297,6 +308,10 @@ function summary() {
     underFire: run.underFire,
     untouched: run.untouched,
     bestCombo: run.bestCombo,
+    difficulty: run.difficulty,
+    specialsUsed: run.specialsUsed,
+    cutters: run.typeSunk.cutter,
+    ironclads: run.typeSunk.ironclad,
     seaEvents: run.seaEvents,
     escorts: run.escorts,
     stage: run.stage
@@ -334,8 +349,10 @@ async function sinkPlayer() {
 // A raider, flagship or kraken has sunk: points (times the combo), gold and a floating text.
 function sinkRaider(wreck, cause) {
   const reward = REWARDS[wreck.type] || REWARDS.raider;
+  const level = getDifficulty();
   explode(wreck.x, wreck.y, wreck.boss);
   run.sunk += 1;
+  if (run.typeSunk[wreck.type] !== undefined) run.typeSunk[wreck.type] += 1;
 
   // Combo: each ship sunk within COMBO_SECONDS of the last one adds to the chain.
   const combo = run.combo;
@@ -346,17 +363,18 @@ function sinkRaider(wreck, cause) {
   run.bestCombo = Math.max(run.bestCombo, combo.count);
   if (combo.count >= 2) emit("combo:changed", { count: combo.count, multiplier: combo.multiplier });
 
-  const points = Math.round(reward.points * combo.multiplier);
+  const points = Math.round(reward.points * combo.multiplier * level.score);
+  const gold = Math.round(reward.gold * level.gold);
   run.score += points;
-  addGold(reward.gold);
+  addGold(gold);
   popup(wreck.x, wreck.y - 30, "+" + points + (combo.multiplier > 1 ? "  x" + combo.multiplier : ""), combo.multiplier > 1 ? "#ff9a4d" : "#ffe9a8", wreck.boss);
 
   if (wreck.type === "kraken") {
     run.bosses += 1;
-    say("The kraken sinks back into the deep! +" + points + " points, +" + reward.gold + " gold.", "good");
+    say("The kraken sinks back into the deep! +" + points + " points, +" + gold + " gold.", "good");
   } else if (wreck.boss) {
     run.bosses += 1;
-    say("The flagship is sunk! +" + points + " points, +" + reward.gold + " gold.", "good");
+    say("The flagship is sunk! +" + points + " points, +" + gold + " gold.", "good");
   } else if (cause === "whirlpool") {
     say("A raider was swallowed by the whirlpool! +" + points + " points.", "good");
   }
@@ -379,6 +397,7 @@ function updateCombo(seconds) {
 // Damage to our ship from anything. steady: small damage every frame (the whirlpool).
 function hurtShip(damage, steady = false) {
   if (damage <= 0) return;
+  damage *= getDifficulty().enemyDamage;
   if (run.shield > 0) {
     if (!steady) emit("shield:blocked");
     return;
@@ -387,7 +406,7 @@ function hurtShip(damage, steady = false) {
   run.damagedThisWave = true;
   if (steady) return;
   run.flash = 0.15;
-  if (getSettings().shake) addShake(0.5);
+  if (getSettings().shake && !getSettings().reduceMotion) addShake(0.5);
   // Being hit breaks the combo.
   if (run.combo.count >= 2) emit("combo:ended", { count: run.combo.count });
   run.combo.count = 0;
@@ -425,6 +444,11 @@ on("sonar:reloaded", (result) => {
   if (ship.hull < 20) {
     run.underFire = true;                     // badge: reload with hull below 20
   }
+  // Every solved puzzle loads one special shot; counting the chests right too adds a broadside.
+  const prize = Math.random() < 0.5 ? "chain" : "fire";
+  run.specials[prize] += 1;
+  if (result.chestCorrect === true) run.specials.broadside += 1;
+  emit("special:earned", { kind: prize, broadside: result.chestCorrect === true });
   if (result.chestCorrect === true) {
     addGold(GOLD.chest);
     say("Reloaded. " + result.chests + " chests - right! +" + GOLD.chest + " gold.", "good");
@@ -477,8 +501,38 @@ window.addEventListener("keydown", (event) => {
     else if (state === "paused") resume();
   } else if (key === "r" && state === "playing" && ship.ammo < stats.cap && !isSonarOpen()) {
     openSonar({ jamSeconds: stats.jamSeconds });
+  } else if (["1", "2", "3", "4"].includes(key) && (state === "playing" || state === "paused")) {
+    chooseShot(SHOT_KINDS[Number(key) - 1]);
+  } else if (key === "q" && (state === "playing" || state === "paused")) {
+    cycleShot();
   }
 });
+
+// Chooses which shot the cannons fire next (a special needs at least one left).
+export function chooseShot(kind) {
+  if (!run || !SHOT_KINDS.includes(kind)) return;
+  if (kind !== "iron" && run.specials[kind] === 0) {
+    say("No " + SHOT_NAMES[kind].toLowerCase() + "s loaded. Solve sonar puzzles to earn them.", "warn");
+    return;
+  }
+  run.selected = kind;
+  emit("special:chosen", kind);
+}
+
+// Q (or the touch button): the next shot type that has ammunition.
+export function cycleShot() {
+  if (!run) return;
+  let index = SHOT_KINDS.indexOf(run.selected);
+  for (let i = 0; i < SHOT_KINDS.length; i++) {
+    index = (index + 1) % SHOT_KINDS.length;
+    const kind = SHOT_KINDS[index];
+    if (kind === "iron" || run.specials[kind] > 0) {
+      run.selected = kind;
+      emit("special:chosen", kind);
+      return;
+    }
+  }
+}
 
 // Leaving the tab pauses the battle, so nobody loses their ship while away.
 document.addEventListener("visibilitychange", () => {
@@ -495,11 +549,15 @@ function updatePlayer(seconds) {
   if (isDown(arrows ? "arrowright" : "d")) moveX += 1;
   if (isDown(arrows ? "arrowup" : "w")) moveY -= 1;
   if (isDown(arrows ? "arrowdown" : "s")) moveY += 1;
+  const stick = getVirtualMove();                // the touch joystick, if used
+  moveX += stick.x;
+  moveY += stick.y;
 
   if (moveX !== 0 || moveY !== 0) {
     const length = Math.hypot(moveX, moveY);
-    ship.x += (moveX / length) * SHIP_SPEED * seconds;
-    ship.y += (moveY / length) * SHIP_SPEED * seconds;
+    const power = Math.min(1, length);            // a half-pushed joystick sails at half speed
+    ship.x += (moveX / length) * SHIP_SPEED * power * seconds;
+    ship.y += (moveY / length) * SHIP_SPEED * power * seconds;
     ship.foamTimer -= seconds;
     if (ship.foamTimer <= 0) {
       foam(ship.x - Math.cos(ship.angle) * 20, ship.y - Math.sin(ship.angle) * 20);
@@ -516,7 +574,17 @@ function updatePlayer(seconds) {
 
   ship.cooldown -= seconds;
   if (mouse.down && ship.cooldown <= 0 && ship.ammo > 0) {
-    fireShot(ship, stats.damage);
+    // a special shot if one is chosen and left, otherwise plain iron
+    let kind = run.selected;
+    if (kind !== "iron" && run.specials[kind] > 0) {
+      run.specials[kind] -= 1;
+      run.specialsUsed += 1;
+      emit("special:fired", kind);
+      if (run.specials[kind] === 0) run.selected = "iron";
+    } else {
+      kind = "iron";
+    }
+    fireShot(ship, stats.damage, kind);
     ship.ammo -= 1;
     ship.cooldown = run.rapid > 0 ? FIRE_DELAY / 2 : FIRE_DELAY;
     emit("shot:fired");
@@ -551,6 +619,8 @@ function update(seconds) {
   updatePlayer(seconds);
   updateShots(seconds);
   updateRaiders(seconds, ship, W, H);
+
+  for (const raider of getRaiders()) applyDifficulty(raider);   // Easy / Normal / Hard
 
   // Our cannonballs hitting raiders.
   const result = checkHits(getShots());
@@ -639,7 +709,9 @@ function draw() {
     banner: run.banner,
     combo: { count: run.combo.count, multiplier: run.combo.multiplier, pop: run.combo.pop, timeLeft: Math.max(0, run.combo.timer / COMBO_SECONDS) },
     popups: run.popups,
-    shake: getSettings().shake ? getShake() : 0
+    look: getMyShip(),
+    specials: { selected: run.selected, chain: run.specials.chain, fire: run.specials.fire, broadside: run.specials.broadside },
+    shake: getSettings().shake && !getSettings().reduceMotion ? getShake() : 0
   });
 
   updateHud({
