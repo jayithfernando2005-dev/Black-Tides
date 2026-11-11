@@ -78,6 +78,8 @@ router.delete("/admin/captains/:name", requireAdmin, (req, res) => {
     db.prepare("DELETE FROM progress WHERE user_id = ?").run(user.id);
     db.prepare("DELETE FROM daily_results WHERE user_id = ?").run(user.id);
     db.prepare("DELETE FROM rivals WHERE user_id = ? OR rival_id = ?").run(user.id, user.id);
+    db.prepare("DELETE FROM quest_progress WHERE user_id = ?").run(user.id);
+    db.prepare("DELETE FROM weekly_winners WHERE user_id = ?").run(user.id);
     db.prepare("DELETE FROM users WHERE id = ?").run(user.id);
     db.exec("COMMIT");
   } catch (error) {

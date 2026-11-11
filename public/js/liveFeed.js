@@ -28,10 +28,15 @@ function describe(item) {
   }
 }
 
+// A pop-up for things that happen only in this game (e.g. a quest finished).
+export function showToast(icon, text, mine = false) {
+  toast({ kind: "local", icon: icon, text: text, username: mine ? me : null });
+}
+
 // Shows one pop-up in the corner for a few seconds.
 function toast(item) {
-  const words = describe(item);
-  if (!words || !enabled) return;
+  const words = item.kind === "local" ? { icon: item.icon, text: item.text } : describe(item);
+  if (!words || (!enabled && item.kind !== "local")) return;
   const box = document.getElementById("toasts");
   const card = document.createElement("div");
   card.className = "toast" + (item.username === me ? " mine" : "");
