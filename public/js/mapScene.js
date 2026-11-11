@@ -1,25 +1,43 @@
-// mapScene.js - the living underwater scene behind the Campaign Map: the water wobbles,
-// light rays sway down from the surface, bubbles rise from the vent, fish swim past and
-// tiny specks drift. Only for looks; it runs only while the map is on screen.
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
+// mapScene.js - the living captain's cabin behind the Campaign Map (img/map-cabin.jpg).
+//   - outside the windows the storm goes on: the sea rolls, the clouds drift, rain runs down
+//     the glass and lightning flashes now and then
+//   - the oil lamp's flame flickers and its warm light breathes over the desk and walls
+// Only the window GLASS moves: img/map-cabin-glass.png is a mask of the panes (made once
+// from the picture), so the wooden frames and bars stay perfectly still.
+// It runs only while the map is on screen, and is still when "Reduce motion" is on.
 import { on } from "./events.js";
+import { getSettings } from "./settings.js";
 
 const canvas = document.getElementById("map-bg");
 const ctx = canvas.getContext("2d");
 const image = new Image();
-image.src = "img/map-underwater.jpg";
+image.src = "img/map-cabin.jpg";
+const glassMask = new Image();
+glassMask.src = "img/map-cabin-glass.png";
+
+// Places in the picture (its own pixels, 1376 x 768).
 const IMG_W = 1376;
 const IMG_H = 768;
+const WINDOWS = { x: 0, y: 60, w: 672, h: 320 };   // the area the glass mask covers
+const SEA_LINE = 258;                               // below this, the view is sea
+const FLAME = { x: 1153, y: 414 };                  // the lamp's flame
 const TAU = Math.PI * 2;
-const random = (a, b) => a + Math.random() * (b - a);
+
+// The view through the windows is drawn here first, then cut to the shape of the glass.
+const view = document.createElement("canvas");
+view.width = WINDOWS.w;
+view.height = WINDOWS.h;
+const vctx = view.getContext("2d");
 
 let running = false;
 let width = 0;
 let height = 0;
 let time = 0;
 let last = 0;
-let bubbles = [];
-let fish = [];
-let specks = [];
+let flash = 0;
+let nextFlash = 5;
+let drops = [];
 
 function resize() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -28,134 +46,165 @@ function resize() {
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  specks = Array.from({ length: 90 }, () => ({ x: Math.random() * width, y: Math.random() * height, r: random(0.6, 1.8), v: random(4, 12) }));
+  ctx.imageSmoothingQuality = "high";
+  // rain drops on the window view (in picture pixels)
+  drops = Array.from({ length: 110 }, () => ({
+    x: Math.random() * WINDOWS.w, y: Math.random() * WINDOWS.h,
+    length: 8 + Math.random() * 14, speed: 260 + Math.random() * 220
+  }));
 }
 
-function newFish(startAnywhere) {
-  const dir = Math.random() < 0.5 ? 1 : -1;
-  const size = random(10, 30);
-  return {
-    dir: dir, size: size, y: random(height * 0.15, height * 0.85),
-    x: startAnywhere ? Math.random() * width : (dir > 0 ? -60 : width + 60),
-    speed: random(25, 60) * (size / 20), phase: random(0, TAU),
-    shade: Math.random() < 0.25 ? "rgba(255,190,90,0.55)" : "rgba(4,18,26,0.55)"
-  };
+// The storm outside, drawn into the small "view" canvas and then cut to the glass.
+function drawView(seconds, still) {
+  vctx.globalCompositeOperation = "source-over";
+  vctx.clearRect(0, 0, WINDOWS.w, WINDOWS.h);
+  const top = WINDOWS.y;
+  // clouds: the sky drifts slowly sideways
+  const drift = Math.sin(time * 0.07) * 7;
+  vctx.drawImage(image, WINDOWS.x, top, WINDOWS.w, SEA_LINE - top, drift - 8, 0, WINDOWS.w + 16, SEA_LINE - top);
+  // the sea: thin rows moved a tiny, smoothly changing amount, so the waves roll
+  for (let y = SEA_LINE; y < top + WINDOWS.h; y += 2) {
+    const depth = (y - SEA_LINE) / (top + WINDOWS.h - SEA_LINE);
+    const roll = Math.sin(y * 0.05 - time * 1.6) * (1 + 3 * depth) + Math.sin(y * 0.021 + time * 0.9) * 1.5 * depth;
+    const lift = Math.sin(y * 0.03 - time * 1.2) * 1.5 * depth;
+    vctx.drawImage(image, WINDOWS.x, y, WINDOWS.w, 3, roll - 6, y - top + lift, WINDOWS.w + 12, 3);
+  }
+  // rain running down the glass
+  vctx.strokeStyle = "rgba(210,225,240,0.35)";
+  vctx.lineWidth = 1;
+  vctx.beginPath();
+  for (const drop of drops) {
+    if (!still) {
+      drop.y += drop.speed * seconds;
+      drop.x += drop.speed * 0.18 * seconds;
+      if (drop.y > WINDOWS.h) { drop.y = -drop.length; drop.x = Math.random() * WINDOWS.w; }
+    }
+    vctx.moveTo(drop.x, drop.y);
+    vctx.lineTo(drop.x - drop.length * 0.18, drop.y - drop.length);
+  }
+  vctx.stroke();
+  // lightning lights up the whole view
+  if (flash > 0) {
+    vctx.fillStyle = "rgba(225,235,255," + 0.55 * flash + ")";
+    vctx.fillRect(0, 0, WINDOWS.w, WINDOWS.h);
+  }
+  // keep only the glass
+  vctx.globalCompositeOperation = "destination-in";
+  vctx.drawImage(glassMask, 0, 0);
 }
 
-function drawFish(f) {
-  const wiggle = Math.sin(time * 8 + f.phase) * f.size * 0.18;
+function draw(seconds, still) {
+  ctx.fillStyle = "#120c08";
+  ctx.fillRect(0, 0, width, height);
+  if (!image.complete || !image.naturalWidth) return;
+
+  // the cabin picture covers the screen
+  const scale = Math.max(width / IMG_W, height / IMG_H);
+  const ox = (width - IMG_W * scale) / 2;
+  const oy = (height - IMG_H * scale) / 2;
+  const sx = (x) => ox + x * scale;
+  const sy = (y) => oy + y * scale;
+  ctx.drawImage(image, ox, oy, IMG_W * scale, IMG_H * scale);
+
+  // lightning comes and goes
+  if (!still) {
+    nextFlash -= seconds;
+    if (nextFlash <= 0) { flash = 1; nextFlash = 6 + Math.random() * 9; }
+    flash = Math.max(0, flash - seconds * 2.4);
+  }
+  const flicker = flash * (0.55 + 0.45 * Math.abs(Math.sin(time * 47)));
+
+  // the storm through the windows
+  if (glassMask.complete && glassMask.naturalWidth) {
+    drawView(seconds, still);
+    ctx.drawImage(view, sx(WINDOWS.x), sy(WINDOWS.y), WINDOWS.w * scale, WINDOWS.h * scale);
+  }
+
+  // the lamp: a flickering flame and warm light that breathes around the room
+  const breathe = still ? 0.85 : 0.78 + 0.12 * Math.sin(time * 9.7) + 0.07 * Math.sin(time * 23.1 + 1.3) + 0.05 * Math.sin(time * 3.1);
+  const fx = sx(FLAME.x), fy = sy(FLAME.y);
   ctx.save();
-  ctx.translate(f.x, f.y + Math.sin(time * 1.2 + f.phase) * 6);
-  ctx.scale(f.dir, 1);
-  ctx.fillStyle = f.shade;
-  ctx.beginPath(); ctx.ellipse(0, 0, f.size, f.size * 0.42, 0, 0, TAU); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-f.size * 0.85, 0); ctx.lineTo(-f.size * 1.6, -f.size * 0.5 + wiggle); ctx.lineTo(-f.size * 1.6, f.size * 0.5 + wiggle); ctx.closePath(); ctx.fill();
+  ctx.globalCompositeOperation = "lighter";
+  const room = ctx.createRadialGradient(fx, fy, 0, fx, fy, 560 * scale);
+  room.addColorStop(0, "rgba(255,170,80," + 0.16 * breathe + ")");
+  room.addColorStop(0.4, "rgba(255,140,60," + 0.06 * breathe + ")");
+  room.addColorStop(1, "rgba(255,140,60,0)");
+  ctx.fillStyle = room;
+  ctx.fillRect(0, 0, width, height);
+  const halo = ctx.createRadialGradient(fx, fy, 0, fx, fy, 70 * scale);
+  halo.addColorStop(0, "rgba(255,230,160," + 0.55 * breathe + ")");
+  halo.addColorStop(1, "rgba(255,190,90,0)");
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(fx, fy, 70 * scale, 0, TAU); ctx.fill();
+  // the flame itself: a small teardrop that sways and stretches
+  const sway = still ? 0 : Math.sin(time * 6.3) * 1.2 * scale + Math.sin(time * 15.7) * 0.6 * scale;
+  const tall = (12 + 4 * breathe) * scale;
+  const flame = ctx.createRadialGradient(fx, fy + 2 * scale, 0, fx, fy, tall);
+  flame.addColorStop(0, "rgba(255,255,235,0.95)");
+  flame.addColorStop(0.5, "rgba(255,200,90,0.75)");
+  flame.addColorStop(1, "rgba(255,120,30,0)");
+  ctx.fillStyle = flame;
+  ctx.beginPath();
+  ctx.moveTo(fx + sway, fy - tall);
+  ctx.quadraticCurveTo(fx + 5 * scale, fy, fx, fy + 4 * scale);
+  ctx.quadraticCurveTo(fx - 5 * scale, fy, fx + sway, fy - tall);
+  ctx.fill();
   ctx.restore();
+
+  // the lightning also lights the room for a moment, coming in from the windows
+  if (flicker > 0) {
+    const light = ctx.createLinearGradient(0, 0, width * 0.7, 0);
+    light.addColorStop(0, "rgba(170,195,255," + 0.22 * flicker + ")");
+    light.addColorStop(1, "rgba(170,195,255,0)");
+    ctx.fillStyle = light;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  // darker edges and middle, so the map board stands out
+  const shade = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.25, width / 2, height / 2, Math.hypot(width, height) * 0.62);
+  shade.addColorStop(0, "rgba(6,4,2,0.45)");
+  shade.addColorStop(0.6, "rgba(6,4,2,0.15)");
+  shade.addColorStop(1, "rgba(6,4,2,0.4)");
+  ctx.fillStyle = shade;
+  ctx.fillRect(0, 0, width, height);
 }
 
 function frame(now) {
   if (!running) return;
-  const seconds = Math.max(0, Math.min(0.1, (now - last) / 1000));
+  const seconds = Math.max(0, Math.min(0.05, (now - last) / 1000));
   last = now;
-  time += seconds;
-
-  // the picture fills the screen, every thin row wobbling like seen through moving water
-  const scale = Math.max(width / IMG_W, height / IMG_H) * 1.04;
-  const dw = IMG_W * scale;
-  const ox = (width - dw) / 2;
-  const oy = (height - IMG_H * scale) / 2;
-  ctx.fillStyle = "#06222e";
-  ctx.fillRect(0, 0, width, height);
-  if (image.complete && image.naturalWidth) {
-    const strip = 4;
-    for (let sy = 0; sy < IMG_H; sy += strip) {
-      const shift = Math.sin(sy * 0.03 + time * 1.3) * 5 + Math.sin(sy * 0.09 - time * 2.1) * 2;
-      ctx.drawImage(image, 0, sy, IMG_W, strip + 1, ox + shift, oy + sy * scale, dw, (strip + 1) * scale);
-    }
-  }
-
-  // light rays from the surface
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (let i = 0; i < 8; i++) {
-    const x = width * (0.05 + i * 0.13) + Math.sin(time * 0.3 + i) * 40;
-    const alpha = 0.05 + 0.04 * Math.sin(time * 0.6 + i * 1.7) ** 2;
-    const ray = ctx.createLinearGradient(0, 0, 0, height * 0.9);
-    ray.addColorStop(0, "rgba(140,220,230," + alpha + ")");
-    ray.addColorStop(1, "rgba(140,220,230,0)");
-    ctx.fillStyle = ray;
-    ctx.beginPath();
-    ctx.moveTo(x - 30, 0); ctx.lineTo(x + 30, 0);
-    ctx.lineTo(x + 110 + Math.sin(time * 0.4 + i) * 40, height * 0.9);
-    ctx.lineTo(x - 10 + Math.sin(time * 0.4 + i) * 40, height * 0.9);
-    ctx.closePath(); ctx.fill();
-  }
-  // shimmering caustics near the surface
-  for (let i = 0; i < 14; i++) {
-    const cx = (i * 173 + time * 18) % (width + 200) - 100;
-    const cy = 20 + (i % 4) * 30 + Math.sin(time + i) * 10;
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 70);
-    g.addColorStop(0, "rgba(170,240,240,0.06)");
-    g.addColorStop(1, "rgba(170,240,240,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(cx - 70, cy - 70, 140, 140);
-  }
-  ctx.restore();
-
-
-  // bubbles rising from the vent on the left, and a few everywhere
-  if (Math.random() < seconds * 14) {
-    bubbles.push({ x: ox + 150 * scale + random(-12, 12), y: oy + 560 * scale, r: random(1.5, 5), v: random(40, 90), p: random(0, TAU) });
-  }
-  if (Math.random() < seconds * 4) {
-    bubbles.push({ x: Math.random() * width, y: height + 10, r: random(1, 3.5), v: random(30, 70), p: random(0, TAU) });
-  }
-  ctx.strokeStyle = "rgba(210,245,250,0.55)";
-  ctx.lineWidth = 1;
-  for (let i = bubbles.length - 1; i >= 0; i--) {
-    const b = bubbles[i];
-    b.y -= b.v * seconds;
-    const x = b.x + Math.sin(time * 3 + b.p) * 4;
-    ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, TAU); ctx.stroke();
-    if (b.y < -10) bubbles.splice(i, 1);
-  }
-
-  // drifting specks
-  ctx.fillStyle = "rgba(200,235,240,0.3)";
-  for (const s of specks) {
-    s.y -= s.v * seconds * 0.3;
-    s.x += Math.sin(time * 0.5 + s.y * 0.01) * 0.2;
-    if (s.y < 0) s.y = height;
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
-  }
-
-  // dark edges, like looking into the deep
-  const v = ctx.createRadialGradient(width / 2, height / 2, Math.min(width, height) * 0.3, width / 2, height / 2, Math.hypot(width, height) * 0.62);
-  v.addColorStop(0, "rgba(0,0,0,0)");
-  v.addColorStop(1, "rgba(0,8,14,0.6)");
-  ctx.fillStyle = v;
-  ctx.fillRect(0, 0, width, height);
+  const still = getSettings().reduceMotion;
+  if (!still) time += seconds;
+  draw(seconds, still);
   requestAnimationFrame(frame);
 }
 
-// Event: plays only while the map screen is showing.
+function start() {
+  if (running) return;
+  running = true;
+  resize();
+  window.addEventListener("resize", resize);
+  last = performance.now();
+  requestAnimationFrame(frame);
+}
+
+function stop() {
+  running = false;
+  window.removeEventListener("resize", resize);
+}
+
+// Event: a screen was shown. The cabin lives only behind the Campaign Map.
 on("screen:shown", (name) => {
   if (name === "map") {
     canvas.classList.add("on");
-    if (!running) {
-      running = true;
-      resize();
-      window.addEventListener("resize", resize);
-      last = performance.now();
-      requestAnimationFrame(frame);
-    }
-  } else if (running) {
+    start();
+  } else {
     canvas.classList.remove("on");
-    setTimeout(() => {
-      if (!canvas.classList.contains("on")) {
-        running = false;
-        window.removeEventListener("resize", resize);
-      }
-    }, 700);
+    setTimeout(() => { if (!canvas.classList.contains("on")) stop(); }, 800);
   }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stop();
+  else if (canvas.classList.contains("on")) start();
 });
