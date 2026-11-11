@@ -13,9 +13,9 @@ const STORIES = {
         text: "For a hundred years the raider fleets have ruled these waters. Ports burn. Ships vanish in the night." },
       { image: "img/menu.jpg", focus: "30% 60%", title: "The last free harbour",
         text: "One harbour still stands. Its cannons are silent: the powder stores are almost empty." },
-      { image: "img/howto-fishchest.png", focus: "50% 50%", title: "The sonar",
+      { image: "img/story-sonar.jpg", focus: "50% 45%", title: "The sonar",
         text: "But your ship carries a sonar. Count the fish beneath the waves, and your crew can reload in the heat of battle." },
-      { image: "img/map-underwater.jpg", focus: "50% 70%", title: "Something waits below",
+      { image: "img/story-kraken.jpg", focus: "50% 35%", title: "Something waits below",
         text: "Far out, past the Galleon Graveyard, the raiders' master stirs. Something old. Something with tentacles. Sail, Captain." }
     ]
   },
@@ -71,8 +71,8 @@ function render() {
   const picture = $("story-picture");
   picture.classList.remove("zoom");
   void picture.offsetWidth;                         // restart the slow zoom
-  picture.style.backgroundImage = "url('" + panel.image + "')";
-  picture.style.backgroundPosition = panel.focus;
+  picture.style.setProperty("--story-image", "url('" + panel.image + "')");
+  picture.style.setProperty("--story-focus", panel.focus);
   picture.classList.add("zoom");
   $("story-title").textContent = panel.title;
   typeOut(panel.text);
