@@ -481,7 +481,7 @@ sonarButton.addEventListener("click", () => {
 // Event: keys that do one thing per press.
 window.addEventListener("keydown", (event) => {
   if (state === "idle") return;
-  const key = event.key.toLowerCase();
+  const key = String(event.key || "").toLowerCase();      // some browser events (e.g. autofill) have no key
 
   if (key === "escape") {
     if (isSonarOpen()) {

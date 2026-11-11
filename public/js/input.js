@@ -14,7 +14,7 @@ window.addEventListener("keydown", (event) => {
   if (isTyping(event)) {
     return;
   }
-  const key = event.key.toLowerCase();
+  const key = String(event.key || "").toLowerCase();      // some browser events (e.g. autofill) have no key
   keysDown.add(key);
   // Stop the arrow keys and space from scrolling the page during play.
   if (key.startsWith("arrow") || key === " ") {
@@ -24,7 +24,7 @@ window.addEventListener("keydown", (event) => {
 
 // Event: a key came back up.
 window.addEventListener("keyup", (event) => {
-  keysDown.delete(event.key.toLowerCase());
+  keysDown.delete(String(event.key || "").toLowerCase());
 });
 
 // Event: the window lost focus. Let go of everything so the ship does not drift.
