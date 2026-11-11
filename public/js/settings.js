@@ -7,7 +7,8 @@ import { emit } from "./events.js";
 const COOKIE_NAME = "bt_settings";
 const ONE_YEAR = 365 * 24 * 60 * 60;          // in seconds
 
-export const DEFAULTS = { sfx: 80, music: 60, ambience: 50, mute: false, shake: true, keys: "wasd", liveNews: true, weatherCity: "colombo" };
+export const DEFAULTS = { sfx: 80, music: 60, ambience: 50, mute: false, shake: true, keys: "wasd", liveNews: true, weatherCity: "colombo", difficulty: "normal",
+  colourBlind: false, bigText: false, reduceMotion: false, highContrast: false };
 // The places the server can read the weather for (server/weather.js has the same list).
 export const WEATHER_CITIES = ["colombo", "kandy", "galle", "jaffna", "trincomalee", "luton", "london"];
 
@@ -27,7 +28,12 @@ function clean(raw) {
     shake: raw.shake !== false,
     keys: raw.keys === "arrows" ? "arrows" : "wasd",
     liveNews: raw.liveNews !== false,
-    weatherCity: WEATHER_CITIES.includes(raw.weatherCity) ? raw.weatherCity : DEFAULTS.weatherCity
+    weatherCity: WEATHER_CITIES.includes(raw.weatherCity) ? raw.weatherCity : DEFAULTS.weatherCity,
+    difficulty: ["easy", "normal", "hard"].includes(raw.difficulty) ? raw.difficulty : "normal",
+    colourBlind: raw.colourBlind === true,
+    bigText: raw.bigText === true,
+    reduceMotion: raw.reduceMotion === true,
+    highContrast: raw.highContrast === true
   };
 }
 

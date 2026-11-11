@@ -290,6 +290,7 @@
         <div class="frame-actions">
           <button type="button" class="plaque-button action-plaque save-plaque" data-nav="map">Set sail</button>
           <button type="button" class="plaque-button action-plaque" data-nav="menu">Return</button>
+          <button type="button" class="plaque-button action-plaque" data-nav="story/intro">Watch the story</button>
         </div>
       </div>
     </section>
@@ -310,6 +311,23 @@
         </div>
 
         <p class="scroll-banner">Spend the gold you earn in battle. Upgrades are kept for every battle.</p>
+
+        <!-- Your ship's name, sail colour and flag (js/shipCustomise.js) -->
+        <details class="ship-custom" id="ship-custom" open>
+          <summary><span class="ship-custom-title">Your ship's colours</span><span class="ship-custom-hint" id="ship-custom-hint">Name your ship, dye the sails, choose a flag</span></summary>
+          <div class="ship-custom-body">
+            <canvas class="ship-preview" id="ship-preview" width="300" height="190" aria-label="Preview of your ship"></canvas>
+            <form class="ship-form" id="ship-form">
+              <label class="ship-name">Ship's name <input id="ship-name" maxlength="24" placeholder="e.g. Sea Serpent" autocomplete="off"></label>
+              <fieldset class="ship-choices"><legend>Sails</legend><div class="sail-swatches" id="sail-swatches"></div></fieldset>
+              <fieldset class="ship-choices"><legend>Flag</legend><div class="flag-tiles" id="flag-tiles"></div></fieldset>
+              <div class="ship-save-row">
+                <button type="submit" class="plaque-button header-plaque save-plaque" id="ship-save">Save my ship</button>
+                <span class="ship-message" id="ship-message" role="status"></span>
+              </div>
+            </form>
+          </div>
+        </details>
 
         <div class="yard-cards" id="shipyard-list"></div>
         <p class="yard-status" id="shipyard-message" role="status"></p>
@@ -335,8 +353,9 @@
 
         <div class="board-tabs" role="tablist" aria-label="Time period">
           <button type="button" role="tab" aria-selected="true" data-period="all">All time</button>
-          <button type="button" role="tab" aria-selected="false" data-period="week">This week</button>
+          <button type="button" role="tab" aria-selected="false" data-period="week">Weekly tournament</button>
         </div>
+        <p class="tournament-banner" id="tournament-banner" hidden></p>
 
         <div class="board-table" role="table" aria-label="Top 10 captains">
           <div class="board-head" role="row">
@@ -353,6 +372,20 @@
         </button>
       </div>
       <p class="board-note">Your own row glows gold. Only logged-in captains' scores are saved.</p>
+    </section>
+
+    <!-- ========== STORY (js/story.js) ========== -->
+    <section class="screen story-screen" id="screen-story" hidden>
+      <div class="story-picture" id="story-picture" role="img" aria-label="Story picture"></div>
+      <div class="story-caption">
+        <h2 id="story-title">The Black Tides</h2>
+        <p id="story-text" aria-live="polite"></p>
+        <div class="story-controls">
+          <span class="story-dots" id="story-dots"></span>
+          <button type="button" class="link" id="story-skip">Skip</button>
+          <button type="button" class="plaque-button header-plaque save-plaque" id="story-next">Next</button>
+        </div>
+      </div>
     </section>
 
     <!-- ========== DAILY CHALLENGE ========== -->
@@ -402,6 +435,13 @@
           </div>
 
           <div class="daily-side">
+            <!-- Daily quests (js/quests.js, server/quests.js) -->
+            <div class="quests" id="quests">
+              <h2 class="ribbon-label">Daily quests</h2>
+              <p class="quests-reset" id="quests-reset"></p>
+              <ul class="quest-list" id="quest-list"></ul>
+              <p class="quests-guest" id="quests-guest" hidden>Log in to take on the daily quests.</p>
+            </div>
             <h2 class="ribbon-label">Today's fastest</h2>
             <ol class="daily-board" id="daily-board"></ol>
             <p class="daily-empty" id="daily-empty">Nobody has finished today's challenge yet. Be the first!</p>
@@ -422,11 +462,13 @@
           <aside class="captain-card">
             <span class="porthole"><span class="porthole-glass" id="cap-portrait"></span></span>
             <p class="captain-since" id="cap-since">Member since -</p>
+            <div class="cap-ship" id="cap-ship"><canvas id="cap-flag" width="44" height="34" aria-hidden="true"></canvas><span><small>Sails aboard</small><b id="cap-ship-name">-</b></span></div>
             <div class="xp-box" id="cap-rank"></div>
             <dl class="captain-facts">
               <dt>Leaderboard</dt><dd><span class="rank-tag" id="cap-place">-</span></dd>
             </dl>
             <button type="button" class="plaque-button header-plaque" id="cap-rival" hidden>Mark as rival</button>
+            <p class="cap-crown" id="cap-crown" hidden></p>
             <p class="cap-me-note" id="cap-me-note" hidden>This is how other captains see you.</p>
           </aside>
           <div class="profile-main">
@@ -443,6 +485,32 @@
               <div class="medal-grid" id="cap-badges"></div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== STATISTICS (js/stats.js) ========== -->
+    <section class="screen board-screen stats-screen" id="screen-stats" hidden>
+      <div class="board-frame">
+        <div class="frame-header">
+          <h1 class="engraved">Ship's Log</h1>
+          <button type="button" class="plaque-button header-plaque" data-nav="profile">Profile</button>
+        </div>
+        <p class="cap-message" id="stats-message" role="status"></p>
+        <p class="stats-empty" id="stats-empty" hidden>No battles yet. Set sail and your log will fill up.</p>
+        <div class="stat-plaques stats-totals">
+          <div class="stat-plaque"><span class="stat-label">Battles</span><span class="stat-window"><b id="st-games">0</b></span></div>
+          <div class="stat-plaque"><span class="stat-label">Average score</span><span class="stat-window"><b id="st-average">0</b></span></div>
+          <div class="stat-plaque"><span class="stat-label">Best score</span><span class="stat-window"><b id="st-best">0</b></span></div>
+          <div class="stat-plaque"><span class="stat-label">All points</span><span class="stat-window"><b id="st-total">0</b></span></div>
+          <div class="stat-plaque"><span class="stat-label">Ships sunk</span><span class="stat-window"><b id="st-sunk">0</b></span></div>
+          <div class="stat-plaque"><span class="stat-label">Best combo</span><span class="stat-window"><b id="st-combo">-</b></span></div>
+        </div>
+        <div class="stats-grid">
+          <figure class="chart-card wide"><figcaption>Score in your last 30 battles</figcaption><div class="chart" id="chart-scores"></div></figure>
+          <figure class="chart-card"><figcaption>Battles per day (last 14 days)</figcaption><div class="chart" id="chart-days"></div></figure>
+          <figure class="chart-card"><figcaption>Favourite waters</figcaption><div class="chart stage-bars" id="chart-stages"></div><p class="chart-note" id="st-difficulty"></p></figure>
+          <figure class="chart-card"><figcaption>Sonar accuracy</figcaption><div class="chart ring-chart" id="chart-sonar"></div><p class="chart-note" id="st-sonar"></p></figure>
         </div>
       </div>
     </section>
@@ -529,6 +597,7 @@
         <div class="frame-actions profile-actions">
           <button type="button" class="plaque-button action-plaque" data-nav="achievements">View all achievements</button>
           <button type="button" class="plaque-button action-plaque" id="profile-public">My public page</button>
+          <button type="button" class="plaque-button action-plaque" data-nav="stats" id="profile-stats">Statistics</button>
         </div>
 
         <!-- Change portrait window (js/portraits.js) -->
@@ -615,6 +684,9 @@
 
           <fieldset class="plank-panel play-panel">
             <legend class="ribbon-label">Play</legend>
+            <div class="plank-row"><label for="set-difficulty">Difficulty<small class="row-note">Hard: tougher raiders, x1.3 points, more gold</small></label>
+              <select id="set-difficulty" class="brass-select"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select>
+            </div>
             <div class="plank-row"><label for="set-shake">Screen shake when hit</label><input class="iron-check" id="set-shake" type="checkbox"></div>
             <div class="plank-row"><label for="set-news">Live sea news pop-ups</label><input class="iron-check" id="set-news" type="checkbox"></div>
             <div class="plank-row"><label for="set-weather">Real weather for the Endless voyage</label>
@@ -673,6 +745,16 @@
             <p class="parchment-note">Sound and play settings are saved in a cookie on this device. The login cookie is separate, and page scripts cannot read it.</p>
             <p class="parchment-status" id="settings-message" role="status"></p>
           </fieldset>
+
+          <fieldset class="plank-panel a11y-panel">
+            <legend class="ribbon-label">Accessibility</legend>
+            <div class="a11y-grid">
+              <div class="plank-row"><label for="set-colourblind">Colour-blind friendly colours<small class="row-note">Blue and orange instead of green and red</small></label><input class="iron-check" id="set-colourblind" type="checkbox"></div>
+              <div class="plank-row"><label for="set-bigtext">Bigger text</label><input class="iron-check" id="set-bigtext" type="checkbox"></div>
+              <div class="plank-row"><label for="set-motion">Reduce motion<small class="row-note">No screen shake, calmer animations</small></label><input class="iron-check" id="set-motion" type="checkbox"></div>
+              <div class="plank-row"><label for="set-contrast">High-contrast battle display</label><input class="iron-check" id="set-contrast" type="checkbox"></div>
+            </div>
+          </fieldset>
         </div>
 
         <div class="frame-actions">
@@ -697,6 +779,15 @@
       <div class="stage">
         <canvas id="sea" width="960" height="600" tabindex="0" aria-label="Sea battle. Steer with W A S D, aim with the mouse, click to fire, R for sonar, P to pause."></canvas>
         <span class="power-tag" id="power-tag" hidden></span>
+        <!-- Touch controls for phones and tablets (js/touch.js): shown only on touch screens. -->
+        <div class="touch-controls" id="touch-controls" hidden>
+          <div class="joystick" id="joystick" aria-label="Steer"><span class="joystick-knob" id="joystick-knob"></span></div>
+          <div class="touch-buttons">
+            <button type="button" class="touch-button" id="touch-shot" aria-label="Change shot type">Shot</button>
+            <button type="button" class="touch-button" id="touch-pause" aria-label="Pause">II</button>
+          </div>
+          <p class="touch-hint" id="touch-hint">Left: steer · Tap or hold the sea to aim and fire · Pull the lever to reload</p>
+        </div>
         <button type="button" class="scan sonar-button" id="sonar-button" disabled><span class="lever-handle" aria-hidden="true"></span><span class="lever-label">Sonar reload (R)</span></button>
 
         <!-- Sonar reload: the battle keeps running behind it. -->
@@ -753,6 +844,7 @@
             <dt>Ships sunk</dt><dd id="over-sunk">0</dd>
             <dt>Bosses sunk</dt><dd id="over-bosses">0</dd>
             <dt>Best combo</dt><dd id="over-combo">0</dd>
+            <dt>Difficulty</dt><dd id="over-difficulty">Normal</dd>
             <dt>Sonar puzzles solved</dt><dd id="over-solved">0</dd>
             <dt>Gold earned</dt><dd id="over-gold">0</dd>
             <dt>Score</dt><dd id="over-score">0</dd>
@@ -761,6 +853,7 @@
           <p class="small" id="over-note" role="status"></p>
           <div class="row">
             <button type="button" class="go" id="next-stage-button" hidden>Next stage</button>
+            <button type="button" class="go" id="ending-button" data-nav="story/ending" hidden>Watch the ending</button>
             <button type="button" class="go" id="again-button">Play again (Enter)</button>
             <button type="button" data-nav="map">Campaign map</button>
             <button type="button" data-nav="leaderboard">Leaderboard</button>

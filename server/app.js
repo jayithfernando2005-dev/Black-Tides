@@ -15,6 +15,9 @@ const weatherRoutes = require("./weatherRoutes");
 const captainRoutes = require("./captainRoutes").router;
 const adminRoutes = require("./adminRoutes");
 const saveRoutes = require("./saveRoutes");
+const questRoutes = require("./questRoutes");
+const shipRoutes = require("./shipRoutes").router;
+const statsRoutes = require("./statsRoutes");
 
 const app = express();
 
@@ -50,5 +53,8 @@ app.use("/api", weatherRoutes);
 app.use("/api", captainRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", saveRoutes);
+app.use("/api", questRoutes);
+app.use("/api", shipRoutes);
+app.use("/api", statsRoutes);
 
 module.exports = app;

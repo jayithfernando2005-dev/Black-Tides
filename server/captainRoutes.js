@@ -14,6 +14,8 @@ const { loadProgressFor } = require("./progress");
 const { listAchievements } = require("./achievements");
 const { rankOf, XP_RULES } = require("./ranks");
 const { avatarInfo } = require("./avatarRoutes");
+const { shipInfo } = require("./shipRoutes");
+const { weeksWon, settleLastWeek } = require("./weekly");
 
 const router = express.Router();
 const MAX_RIVALS = 5;
@@ -29,6 +31,7 @@ function bestDaily(userId) {
 
 // GET /api/captains/:name - a captain's public page.
 router.get("/captains/:name", (req, res) => {
+  settleLastWeek();
   const user = findUserByName(String(req.params.name));
   if (!user) {
     return res.status(404).json({ error: "There is no captain with that name." });
@@ -40,7 +43,9 @@ router.get("/captains/:name", (req, res) => {
     username: user.username,
     memberSince: user.created_at,
     ...avatarInfo(user),
+    ...shipInfo(user),
     rank: rankOf(user.id),
+    weeksWon: weeksWon(user.id),
     xpRules: XP_RULES,
     leaderboardPlace: getRank(user.id),
     games: record.games,

@@ -93,7 +93,12 @@ export function saveScore(summary) {
     bosses: summary.bosses,
     goldEarned: summary.goldEarned,
     underFire: summary.underFire,
-    untouched: summary.untouched
+    untouched: summary.untouched,
+    stage: summary.stage ? summary.stage.id : 0,
+    difficulty: summary.difficulty,
+    bestCombo: summary.bestCombo,
+    // extra numbers for the daily quests
+    questStats: { cutters: summary.cutters, ironclads: summary.ironclads, escorts: summary.escorts, specialsUsed: summary.specialsUsed }
   });
 }
 
@@ -200,4 +205,35 @@ export function adminRemove(name) {
 // The save file itself is downloaded straight from /api/save (a normal link).
 export function importSave(save) {
   return postJson("/api/save/import", { save: save });
+}
+
+// ----- Daily quests -----
+
+export function getQuests() {
+  return getJson("/api/quests");
+}
+
+export function claimQuest(key) {
+  return postJson("/api/quests/" + encodeURIComponent(key) + "/claim", {});
+}
+
+// ----- Ship customisation -----
+
+export function saveShip(look) {
+  return postJson("/api/profile/ship", look);
+}
+
+// The save file as data (the same file Settings downloads).
+export function downloadSave() {
+  return getJson("/api/save");
+}
+
+// ----- Weekly tournament and statistics -----
+
+export function getTournament() {
+  return getJson("/api/tournament");
+}
+
+export function getStats() {
+  return getJson("/api/stats");
 }

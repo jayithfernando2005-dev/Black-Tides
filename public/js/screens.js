@@ -18,6 +18,12 @@ import { showCaptain, showRivals } from "./captainPage.js";
 import { showAdmin } from "./adminPage.js";
 import { renderRank } from "./rankView.js";
 import { shareBattle } from "./shareCard.js";
+import { DIFFICULTY } from "./difficulty.js";
+import { showToast } from "./liveFeed.js";
+import { showShipCustomise } from "./shipCustomise.js";
+import { showStory, storySeen } from "./story.js";
+import { showStats } from "./stats.js";
+import { showQuests } from "./quests.js";
 import { showMap, getVoyage, advanceTo, chooseStage, chooseEndless } from "./campaign.js";
 
 let lastVoyage = null;     // the voyage that just ended, for "Play again"
@@ -33,6 +39,8 @@ const SCREENS = {
   achievements: "Achievements",
   settings: "Settings",
   map: "Campaign map",
+  stats: "Statistics",
+  story: "Story",
   daily: "Daily Challenge",
   captain: "Captain",
   admin: "Harbour master",
@@ -155,7 +163,16 @@ function formatDate(iso) {
 
 const loaders = {
   game() {
-    emit("battle:start", getVoyage());          // a campaign stage or an endless voyage
+    const voyage = getVoyage();
+    // The first time anyone sails Stage 1 on this device, the story comes first.
+    if (voyage.mode === "stage" && voyage.stage && voyage.stage.id === 1 && !storySeen()) {
+      return redirect("story/intro");
+    }
+    emit("battle:start", voyage);               // a campaign stage or an endless voyage
+  },
+
+  story(name) {
+    showStory(name || "intro");
   },
 
   map() {
@@ -164,6 +181,7 @@ const loaders = {
 
   daily() {
     showDaily(player.username);
+    showQuests(Boolean(player.username));
   },
 
   captain(name) {
@@ -173,6 +191,11 @@ const loaders = {
 
   admin() {
     showAdmin();
+  },
+
+  stats() {
+    if (!player.username) return redirect("profile");
+    showStats();
   },
 
   async menu() {
@@ -201,6 +224,7 @@ const loaders = {
 
   shipyard() {
     showShipyard($("shipyard-list"), $("shipyard-gold"), $("shipyard-message"));
+    showShipCustomise(Boolean(player.username));
   },
 
   leaderboard() {
@@ -212,6 +236,7 @@ const loaders = {
     $("profile-body").hidden = player.guest;
     document.querySelector("#screen-profile [data-nav=achievements]").hidden = player.guest;
     $("profile-public").hidden = player.guest;
+    $("profile-stats").hidden = player.guest;
     if (player.guest) return;
     try {
       const [profile, badges] = await Promise.all([api.getProfile(), api.getAchievements()]);
@@ -264,6 +289,11 @@ const loaders = {
     $("set-keys").value = settings.keys;
     $("set-news").checked = settings.liveNews;
     $("set-weather").value = settings.weatherCity;
+    $("set-difficulty").value = settings.difficulty;
+    $("set-colourblind").checked = settings.colourBlind;
+    $("set-bigtext").checked = settings.bigText;
+    $("set-motion").checked = settings.reduceMotion;
+    $("set-contrast").checked = settings.highContrast;
     showVolumes();
     $("settings-message").textContent = "";
     $("set-stay").disabled = player.guest;
@@ -294,7 +324,32 @@ on("avatar:changed", (result) => {
 
 // ----- Leaderboard -----
 
+// The banner over the weekly tournament: week, time left, last week's champion.
+async function showTournament(visible) {
+  const banner = $("tournament-banner");
+  banner.hidden = !visible;
+  if (!visible) return;
+  try {
+    const t = await api.getTournament();
+    const days = Math.floor(t.endsIn / 86400);
+    const hours = Math.floor((t.endsIn % 86400) / 3600);
+    banner.replaceChildren();
+    const title = document.createElement("b");
+    title.textContent = "Week " + Number(t.week.split("-W")[1]) + " tournament";
+    banner.append(title, " · ends in " + (days ? days + " d " : "") + hours + " h · the best score this week wins the champion's crown");
+    if (t.lastChampion) {
+      const champ = document.createElement("span");
+      champ.className = "last-champion";
+      champ.textContent = "👑 Last week: " + t.lastChampion.username + " (" + t.lastChampion.score.toLocaleString("en-GB") + ")";
+      banner.append(champ);
+    }
+  } catch (error) {
+    banner.textContent = error.message;
+  }
+}
+
 async function loadLeaderboard(period) {
+  showTournament(period === "week");
   const body = $("leaderboard-body");
   const empty = $("leaderboard-empty");
   body.replaceChildren();
@@ -303,7 +358,7 @@ async function loadLeaderboard(period) {
     const rows = await api.getLeaderboard(period);
     renderLeaderboard(body, rows, player.username);     // leaderboardView.js draws the rows
     empty.textContent = period === "week"
-      ? "No battles saved this week yet. Set sail and take the top spot."
+      ? "No battles in this week's tournament yet. Set sail and take the top spot."
       : "No battles saved yet. Be the first captain on the board.";
     empty.hidden = rows.length > 0;
   } catch (error) {
@@ -362,6 +417,7 @@ $("register-form").addEventListener("submit", async (event) => {
     $("register-form").reset();
     const me = await api.whoAmI();
     setPlayer({ ...me, username: result.username });
+    emit("captain:registered", result.username);
     go("menu");
   } catch (error) {
     showFormError(message, error.message);
@@ -413,7 +469,12 @@ $("settings-form").addEventListener("submit", async (event) => {
     shake: $("set-shake").checked,
     keys: $("set-keys").value,
     liveNews: $("set-news").checked,
-    weatherCity: $("set-weather").value
+    weatherCity: $("set-weather").value,
+    difficulty: $("set-difficulty").value,
+    colourBlind: $("set-colourblind").checked,
+    bigText: $("set-bigtext").checked,
+    reduceMotion: $("set-motion").checked,
+    highContrast: $("set-contrast").checked
   });
   let text = "Settings saved on this device.";
   if (!player.guest && $("set-stay").checked !== player.remember) {
@@ -453,6 +514,7 @@ on("battle:over", async (summary) => {
   $("over-wave").textContent = summary.wave;
   $("over-sunk").textContent = summary.sunk;
   $("over-bosses").textContent = summary.bosses;
+  $("over-difficulty").textContent = DIFFICULTY[summary.difficulty] ? DIFFICULTY[summary.difficulty].label : "Normal";
   $("over-combo").textContent = summary.bestCombo >= 2 ? summary.bestCombo + " in a row" : "-";
   $("over-solved").textContent = summary.puzzlesSolved;
   $("over-gold").textContent = summary.goldEarned;
@@ -468,6 +530,7 @@ on("battle:over", async (summary) => {
   $("over-title").textContent = summary.victory ? "Victory!" : "Ship sunk";
   $("over-panel").classList.toggle("victory", summary.victory === true);
   $("next-stage-button").hidden = true;
+  $("ending-button").hidden = !(summary.victory && stage && stage.id === 9);
   $("again-button").textContent = summary.victory ? "Play stage again" : "Play again (Enter)";
   if (stage && summary.victory && result) {
     let text = "Stage " + stage.id + " · " + stage.name + " won! +" + result.reward + " gold.";
@@ -496,6 +559,9 @@ on("battle:over", async (summary) => {
     const result = await api.saveScore(summary);
     $("over-note").textContent = "Score saved to your captain's record.";
     $("over-best").hidden = !result.personalBest;
+    for (const quest of result.questsCompleted || []) {
+      showToast("📜", "Quest complete: " + quest + "! Claim your gold on the Daily Challenge screen.", true);
+    }
     if (result.newAchievements.length > 0) {
       $("over-badges").textContent = "New achievement: " + result.newAchievements.join(", ");
       $("over-badges").hidden = false;

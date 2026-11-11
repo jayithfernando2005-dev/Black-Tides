@@ -59,6 +59,10 @@ addColumnIfMissing("scores", "bosses", "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("scores", "gold_earned", "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("scores", "under_fire", "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing("scores", "untouched", "INTEGER NOT NULL DEFAULT 0");
+// Added later: which stage (0 = Endless voyage), the difficulty, and the best combo.
+addColumnIfMissing("scores", "stage", "INTEGER NOT NULL DEFAULT 0");
+addColumnIfMissing("scores", "difficulty", "TEXT NOT NULL DEFAULT 'normal'");
+addColumnIfMissing("scores", "best_combo", "INTEGER NOT NULL DEFAULT 0");
 // The campaign: the highest stage a captain may play (1 = only the first stage).
 addColumnIfMissing("progress", "campaign", "INTEGER NOT NULL DEFAULT 1");
 // The captain's portrait: NULL (made from the name), "preset:3", or an uploaded picture.
@@ -88,6 +92,32 @@ db.exec(`
     PRIMARY KEY (day, user_id)
   )
 `);
+
+// Daily quests: how far each captain has got with each of today's quests.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS quest_progress (
+    day       TEXT NOT NULL,
+    user_id   INTEGER NOT NULL REFERENCES users(id),
+    quest_key TEXT NOT NULL,
+    progress  INTEGER NOT NULL DEFAULT 0,
+    claimed   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (day, user_id, quest_key)
+  )
+`);
+
+// Weekly tournament winners, worked out once each week has ended.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS weekly_winners (
+    week    TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    score   INTEGER NOT NULL
+  )
+`);
+
+// Ship customisation: name, sail colour and flag.
+addColumnIfMissing("users", "ship_name", "TEXT");
+addColumnIfMissing("users", "sail_colour", "TEXT NOT NULL DEFAULT 'white'");
+addColumnIfMissing("users", "flag", "TEXT NOT NULL DEFAULT 'skull'");
 
 // Rivals: captains a player has chosen to keep an eye on.
 db.exec(`
