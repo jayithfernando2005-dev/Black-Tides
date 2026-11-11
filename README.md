@@ -182,3 +182,25 @@ Runs 26 tests with Node's built-in test runner (`node --test`), from the `tests`
 - **Share cards**: "Download share card" on the end-of-battle panel and after the Daily Challenge makes a 1200 x 630 PNG with your portrait, rank and result (drawn in the browser, nothing uploaded).
 - **Admin page (Harbour master)**: `npm run make-admin -- <username>` gives a captain the admin role (`npm run make-admin -- <username> remove` takes it away). Admins see every captain and can rename, reset progress or remove accounts. The role is checked on the server for every request; admin accounts cannot be changed from the page.
 - **Save files**: Settings → Save file → Download gives a JSON file with gold, upgrades, campaign and sonar record, signed with HMAC-SHA256. Load refuses edited files and other captains' saves (a guest's save can be loaded into a new account). Scores are never in save files.
+
+## Gameplay upgrades (step 29)
+
+- **Difficulty** (Settings → Play): Easy, Normal or Hard. All the numbers live in one object in `public/js/difficulty.js` (enemy damage, speed and toughness, gold and score multipliers). The difficulty is saved with each battle.
+- **Special cannon shots**: every solved sonar puzzle loads a chain shot (slows a ship for 4 s) or a fire shot (burns and splashes nearby ships); counting the chests right too adds a broadside (5 shots in a fan). Keys 1–4 choose, Q cycles; the tray at the bottom of the battle shows what is loaded.
+- **Daily quests** (`server/quests.js`): three quests a day, the same for everyone (picked from 12 using the date). Progress comes from saved battles, solved puzzles, the Daily Challenge and stage wins. Finished quests are claimed for gold on the Daily Challenge screen; a pop-up says when one is done.
+
+## Look and feel
+
+- **Ship customisation** (Shipyard → Your ship's colours): a ship name, six sail colours (dyed on the canvas with a "multiply" blend) and six flags, shown in battle and on your captain page. `POST /api/profile/ship` only accepts the listed choices.
+- **Story**: comic-style panels before Stage 1 (once per device, or from How to play) and an ending after winning the Galleon Graveyard.
+- **Stage sounds** (`public/js/stageSounds.js`): gulls, bells, creaking timbers, thunder in storms, the kraken's roar and the whirlpool's rush, all made with the Web Audio API and played through the ambience volume.
+- **Touch controls**: on phones and tablets a joystick steers and a finger on the sea aims and fires. They sit under the sea on an upright phone and over it in landscape.
+
+## Extras
+
+- **Guest progress kept** (`public/js/guestKeeper.js`): the guest's signed save file is copied into the browser after each battle, restored next visit, and carried into a new account on sign-up.
+- **Weekly tournament** (`server/weekly.js`): the leaderboard's "Weekly tournament" tab counts battles since Monday 00:00. When a week ends its winner is stored and wears a champion's crown on their captain page.
+- **Accessibility** (Settings → Accessibility): colour-blind friendly colours, bigger text, reduced motion (no shake, calmer animations) and a high-contrast battle display.
+- **Statistics** (Profile → Statistics): SVG charts drawn by hand: score over the last 30 battles, battles per day, favourite waters and sonar accuracy (`GET /api/stats`).
+
+Tests: `npm test` now runs 49 tests (new: quests, ship customisation, the weekly tournament and statistics).
