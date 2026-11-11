@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // input.js - keeps track of which keys are held and where the mouse is.
 const keysDown = new Set();
 const mouse = { x: 480, y: 300, down: false };
@@ -32,6 +33,18 @@ window.addEventListener("blur", () => {
   mouse.down = false;
 });
 
+// The on-screen joystick (touch.js) steers through this: x and y from -1 to 1.
+const virtualMove = { x: 0, y: 0 };
+
+export function setVirtualMove(x, y) {
+  virtualMove.x = x;
+  virtualMove.y = y;
+}
+
+export function getVirtualMove() {
+  return virtualMove;
+}
+
 export function isDown(key) {
   return keysDown.has(key);
 }
@@ -58,4 +71,23 @@ export function watchMouse(canvas) {
     mouse.down = false;
   });
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+  // Touch: a finger on the sea aims and fires while it stays down.
+  canvas.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch") return;
+    place(event);
+    mouse.down = true;
+    try {
+      canvas.setPointerCapture(event.pointerId);
+    } catch (error) {
+      // capture is only a nicety: the controls still work without it
+    }
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "touch" && mouse.down) place(event);
+  });
+  for (const name of ["pointerup", "pointercancel"]) {
+    canvas.addEventListener(name, (event) => {
+      if (event.pointerType === "touch") mouse.down = false;
+    });
+  }
 }

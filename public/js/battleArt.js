@@ -7,6 +7,9 @@
 const TAU = Math.PI * 2;
 
 // facing: which way the bow points in the picture (1 = right, -1 = left).
+import { drawFlag, SAILS } from "./shipLook.js";
+import { palette } from "./accessibility.js";
+
 const SPRITES = {
   sea: { url: "img/battle-sea.jpg" },
   player: { url: "img/battle-player.png", facing: 1 },
@@ -148,15 +151,75 @@ function paintedShip(ctx, key, x, y, faceRight, width, time, flash, seed) {
   ctx.restore();
 }
 
-export function drawPaintedPlayer(ctx, ship, time, flash) {
+// A copy of the player's ship with the sails dyed: "multiply" colours the light sails and
+// leaves the dark wood dark; "destination-in" keeps only the ship's own shape.
+const dyed = new Map();
+function dyedPlayer(sail) {
+  if (sail === "white" || !SAILS[sail] || !ready("player")) return null;
+  if (!dyed.has(sail)) {
+    const image = SPRITES.player.image;
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const c = canvas.getContext("2d");
+    c.drawImage(image, 0, 0);
+    c.globalCompositeOperation = "multiply";
+    c.fillStyle = SAILS[sail].colour;
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.globalCompositeOperation = "destination-in";
+    c.drawImage(image, 0, 0);
+    dyed.set(sail, canvas);
+  }
+  return dyed.get(sail);
+}
+
+// look: { name, sail, flag } from shipLook.js (optional).
+export function drawPaintedPlayer(ctx, ship, time, flash, look) {
   const faceRight = Math.cos(ship.angle) >= 0;
   // a soft gold ring on the water marks your own ship
   ctx.save();
-  ctx.strokeStyle = "rgba(243,212,138," + (0.35 + 0.15 * Math.sin(time * 3)) + ")";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = palette().contrast ? palette().safe : "rgba(243,212,138," + (0.35 + 0.15 * Math.sin(time * 3)) + ")";
+  ctx.lineWidth = palette().contrast ? 4 : 2;
   ctx.beginPath(); ctx.ellipse(ship.x, ship.y + 24, 50, 15, 0, 0, TAU); ctx.stroke();
   ctx.restore();
-  paintedShip(ctx, "player", ship.x, ship.y - 14, faceRight, 96, time, flash, 0);
+  const dye = look ? dyedPlayer(look.sail) : null;
+  if (dye) {
+    // draw the dyed copy in place of the normal picture
+    const saved = SPRITES.player.image;
+    SPRITES.player.image = dye;
+    dye.naturalWidth = dye.width;
+    dye.naturalHeight = dye.height;
+    paintedShip(ctx, "player", ship.x, ship.y - 14, faceRight, 96, time, flash, 0);
+    SPRITES.player.image = saved;
+  } else {
+    paintedShip(ctx, "player", ship.x, ship.y - 14, faceRight, 96, time, flash, 0);
+  }
+  if (look) {
+    // the captain's flag on the mast top, flying towards the stern
+    const bob = Math.sin(time * 2.1) * 2;
+    drawFlag(ctx, look.flag, ship.x, ship.y - 80 + bob, 20, time, faceRight ? -1 : 1);
+    if (look.name) {
+      ctx.save();
+      ctx.font = "700 12px Cinzel, Georgia, serif";
+      ctx.textAlign = "center";
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(10,6,4,0.8)";
+      ctx.strokeText(look.name, ship.x, ship.y + 52);
+      ctx.fillStyle = "#f3d48a";
+      ctx.fillText(look.name, ship.x, ship.y + 52);
+      ctx.restore();
+    }
+  }
+}
+
+// The ship on its own, for the Shipyard preview (a small canvas).
+export function drawShipPreview(ctx, look, width, height, time) {
+  ctx.clearRect(0, 0, width, height);
+  const sea = ctx.createLinearGradient(0, height * 0.55, 0, height);
+  sea.addColorStop(0, "rgba(20,60,80,0)"); sea.addColorStop(1, "rgba(20,60,80,0.6)");
+  ctx.fillStyle = sea; ctx.fillRect(0, 0, width, height);
+  if (!ready("player")) return;
+  drawPaintedPlayer(ctx, { x: width / 2, y: height * 0.62, angle: 0 }, time, false, look);
 }
 
 export function drawPaintedRaider(ctx, raider, time) {
@@ -197,12 +260,37 @@ export function drawPaintedRaider(ctx, raider, time) {
   } else {
     paintedShip(ctx, look.key, raider.x, raider.y - 10, faceRight, 78, time, raider.flash > 0, look.seed);
   }
+  // high-contrast mode: a bright ring around every enemy so it is easy to spot
+  if (palette().contrast) {
+    ctx.save();
+    ctx.strokeStyle = palette().danger; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(raider.x, raider.y + 10, raider.size + 22, (raider.size + 22) * 0.4, 0, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+  // burning ships trail flames; chain-shot ships show torn sail rags
+  if (raider.burn > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 3; i++) {
+      const fx = raider.x - 12 + i * 12, fy = raider.y - 18 - Math.abs(Math.sin(time * 9 + i * 2)) * 10;
+      const flame = ctx.createRadialGradient(fx, fy, 0, fx, fy, 12);
+      flame.addColorStop(0, "rgba(255,230,120,0.95)"); flame.addColorStop(1, "rgba(255,80,0,0)");
+      ctx.fillStyle = flame; ctx.beginPath(); ctx.arc(fx, fy, 12, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  if (raider.slow > 0) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(200,210,220,0.9)"; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.arc(raider.x, raider.y - 6, raider.size + 14, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
   // health bar (always shown for ironclads, once hit for the others)
   if (raider.hp < raider.maxHp || raider.type === "ironclad") {
     const top = raider.type === "ironclad" ? raider.y - 56 : raider.y - 44;
     ctx.fillStyle = "rgba(10,6,4,0.8)";
     ctx.fillRect(raider.x - 18, top, 36, 5);
-    ctx.fillStyle = raider.type === "ironclad" ? "#b8c4cc" : "#e0422e";
+    ctx.fillStyle = raider.type === "ironclad" ? "#b8c4cc" : palette().danger;
     ctx.fillRect(raider.x - 18, top, 36 * Math.max(0, raider.hp / raider.maxHp), 5);
   }
 }
@@ -252,6 +340,32 @@ export function drawPaintedCrate(ctx, crate, colour, time) {
 
 // ---------- cannonballs ----------
 export function drawIronShot(ctx, shot) {
+  if (shot.kind === "chain") {
+    // two balls joined by a spinning chain
+    const spin = shot.life * 18;
+    const dx = Math.cos(spin) * 9, dy = Math.sin(spin) * 9;
+    ctx.save();
+    ctx.strokeStyle = "#9aa3ab"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(shot.x - dx, shot.y - dy); ctx.lineTo(shot.x + dx, shot.y + dy); ctx.stroke();
+    ctx.fillStyle = "#2a2826";
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(shot.x + s * dx, shot.y + s * dy, 4, 0, TAU); ctx.fill(); }
+    ctx.restore();
+    return;
+  }
+  if (shot.kind === "fire") {
+    // a ball of flame with a long hot tail
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const tail = ctx.createLinearGradient(shot.x, shot.y, shot.x - shot.vx * 0.1, shot.y - shot.vy * 0.1);
+    tail.addColorStop(0, "rgba(255,170,40,0.95)"); tail.addColorStop(1, "rgba(255,60,0,0)");
+    ctx.strokeStyle = tail; ctx.lineWidth = 9; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(shot.x, shot.y); ctx.lineTo(shot.x - shot.vx * 0.1, shot.y - shot.vy * 0.1); ctx.stroke();
+    const glow = ctx.createRadialGradient(shot.x, shot.y, 0, shot.x, shot.y, 12);
+    glow.addColorStop(0, "#fff6c0"); glow.addColorStop(0.5, "#ffa020"); glow.addColorStop(1, "rgba(255,60,0,0)");
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(shot.x, shot.y, 12, 0, TAU); ctx.fill();
+    ctx.restore();
+    return;
+  }
   // smoke trail, then a dark iron ball with a hot edge
   ctx.save();
   ctx.globalCompositeOperation = "lighter";

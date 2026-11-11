@@ -6,6 +6,7 @@ import { renderPortrait } from "./portraits.js";
 import { renderMedals } from "./medals.js";
 import { renderRank } from "./rankView.js";
 import { emit } from "./events.js";
+import { drawFlag, SAILS } from "./shipLook.js";
 
 const $ = (id) => document.getElementById(id);
 let shown = null;            // the captain on screen
@@ -26,6 +27,11 @@ export async function showCaptain(name, me) {
     $("cap-name").textContent = c.username;
     renderPortrait($("cap-portrait"), c.username, c.avatar, c.avatarVersion);
     renderRank($("cap-rank"), c.rank);
+    // the captain's ship: flag, name and sail colour
+    const flag = $("cap-flag").getContext("2d");
+    flag.clearRect(0, 0, 44, 34);
+    drawFlag(flag, c.ship.flag, 6, 4, 30, 0.3);
+    $("cap-ship-name").textContent = (c.ship.name || "An unnamed ship") + " · " + SAILS[c.ship.sail].label + " sails";
     $("cap-since").textContent = "Member since " + formatDate(c.memberSince);
     $("cap-place").textContent = c.leaderboardPlace ? "#" + c.leaderboardPlace : "Unranked";
     $("cap-games").textContent = c.games;
@@ -43,6 +49,10 @@ export async function showCaptain(name, me) {
     button.textContent = c.isRival ? "Remove rival" : "Mark as rival";
     button.classList.toggle("save-plaque", !c.isRival);
     $("cap-me-note").hidden = !c.isMe;
+    // weekly tournament wins
+    $("cap-crown").hidden = c.weeksWon.length === 0;
+    $("cap-crown").textContent = "👑 Weekly champion" + (c.weeksWon.length > 1 ? " ×" + c.weeksWon.length : "") +
+      (c.weeksWon.length ? " (latest " + c.weeksWon[0].week.replace("-W", ", week ") + ")" : "");
   } catch (error) {
     $("cap-message").textContent = error.message;
   }
