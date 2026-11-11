@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // weekly.js - the weekly tournament. Each week (Monday 00:00 to Sunday 23:59, server time)
 // has its own leaderboard. When a week is over, its winner is written into weekly_winners
 // the next time anyone asks, and wears the champion's crown on their captain page.

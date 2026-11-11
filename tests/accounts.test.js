@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // accounts.test.js - captain accounts, logging in, and who may do what.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");

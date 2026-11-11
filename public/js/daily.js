@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // daily.js - the Daily Challenge screen. Every captain counts the same Fish API picture
 // today. The clock and the answers live on the server (server/daily.js); this file only
 // shows the picture, a matching clock and today's fastest captains.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // Black Tides - the server. It sends the game to the browser and answers the
 // game's requests: accounts, sonar puzzles, gold, the Shipyard, scores, the Daily
 // Challenge, live sea news and the weather. The routes themselves are in server/app.js.

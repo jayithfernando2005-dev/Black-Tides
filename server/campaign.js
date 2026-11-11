@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaign.js - the nine stages of the Naval Campaign. Each stage is a battle with a goal
 // (survive a number of waves) and its own twist. Clearing a stage unlocks the next one.
 // The stage list lives only here on the server; the browser receives it from GET /api/campaign.

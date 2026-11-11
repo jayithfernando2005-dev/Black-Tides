@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shipyard.js - shows the four upgrades as wooden cards (picture, stars, level bar and
 // price tag) and buys them through our server (the server checks the gold).
 // Used in two places: the Shipyard screen and the panel between waves in battle.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // enemies.js - raider ships and the bosses: where they appear,
 // how they sail, when they fire, and when our cannonballs hit them.
 // Raider types: "raider" (normal), "cutter" (small and fast), "ironclad" (slow and armoured).

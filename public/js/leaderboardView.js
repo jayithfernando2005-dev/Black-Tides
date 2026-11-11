@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // leaderboardView.js - draws the rows of the leaderboard board: rank plates, a captain
 // portrait made from the captain's name, an achievement crest with stars, and the score.
 // screens.js fetches the data; this file only turns it into HTML (looks only).

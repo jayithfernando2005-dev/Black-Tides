@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // story.js - comic-style story panels: the intro before Stage 1 (shown once, can be watched
 // again from How to play) and the ending after the kraken falls in the Galleon Graveyard.
 // Each panel is one of the game's paintings, slowly zooming, with words typed out below.

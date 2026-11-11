@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // authRoutes.js - register, log in, log out, "who am I?" and "stay logged in".
 const express = require("express");
 const { publish } = require("./liveEvents");

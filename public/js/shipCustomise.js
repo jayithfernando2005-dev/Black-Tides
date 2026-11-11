@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shipCustomise.js - the "Your ship's colours" panel in the Shipyard: a name, six sail
 // colours and six flags, with a live preview of the ship. Saving sends the choice to the
 // server (POST /api/profile/ship); the battle then shows it (shipLook.js, battleArt.js).

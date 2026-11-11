@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // dailyRoutes.js - the web addresses for the Daily Challenge.
 // The answers never leave the server, the clock is kept on the server, and each captain
 // can finish the challenge only once a day.

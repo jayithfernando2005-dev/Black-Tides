@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // puzzleRoutes.js - the web addresses the game calls for sonar puzzles.
 const express = require("express");
 const { recordQuestStats } = require("./quests");

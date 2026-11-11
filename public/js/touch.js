@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // touch.js - on-screen controls for phones and tablets. A joystick on the left steers the
 // ship, a finger on the sea aims and fires (input.js), and buttons change the shot type and
 // pause. The controls only appear on touch screens.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // sound.js - every sound in the game, made in code with the Web Audio API
 // (no sound files needed). Sounds play in reaction to game events,
 // so the battle code never has to know that sound exists.

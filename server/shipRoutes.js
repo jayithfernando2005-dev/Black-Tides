@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shipRoutes.js - ship customisation: a name, a sail colour and a flag.
 //   POST /api/profile/ship  { name, sail, flag }
 // Only the choices below are accepted, so nothing odd can reach other players' screens.

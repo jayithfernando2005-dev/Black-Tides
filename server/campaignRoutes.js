@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaignRoutes.js - the Naval Campaign. The server decides which stages a captain
 // may play and when a stage counts as won, so the browser cannot skip ahead.
 const express = require("express");

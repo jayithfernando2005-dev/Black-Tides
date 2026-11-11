@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // liveAndWeather.test.js - live sea news (Server-Sent Events) and the real-weather rules.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");

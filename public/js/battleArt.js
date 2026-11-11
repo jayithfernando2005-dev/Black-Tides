@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // battleArt.js - the painted look of the battle: the stormy sea, the painted ships and
 // crates (cut from the Black Tides battle artwork), fiery cannonballs, falling fireballs,
 // the brass compass radar and the flagship plaque. Only drawing - it never changes the game.

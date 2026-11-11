@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // fishApi.js - talks to the lecturer's Fish Game API.
 // This is the only file in the project that knows the API's address.
 

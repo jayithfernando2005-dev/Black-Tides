@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // captainPage.js - a captain's public page (#/captain/Name), and the Rivals panel on
 // your own profile. Everything shown comes from the server's public record.
 import * as api from "./api.js";

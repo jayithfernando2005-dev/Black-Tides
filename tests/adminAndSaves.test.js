@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // adminAndSaves.test.js - the admin page's permissions, and signed save files.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");

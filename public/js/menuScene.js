@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // menuScene.js - the living harbour battle behind the main menu (img/menu.jpg).
 // liveScene.js does the animation; this file only says where things are in the
 // picture, and starts or stops the scene when the menu is shown or hidden.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // input.js - keeps track of which keys are held and where the mouse is.
 const keysDown = new Set();
 const mouse = { x: 480, y: 300, down: false };

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // fullscreen.js - the full-screen button (bottom-left corner) and the F key.
 // It uses the browser's Fullscreen API; Esc also leaves full screen (the browser does that).
 // The button changes its icon and label from the "fullscreenchange" event, so it is right

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // portraits.js - shows a captain's portrait anywhere in the game, and the window for
 // changing it. A portrait is one of: made from the name (default), one of 12 ready-made
 // pirates ("preset:0" to "preset:11"), or a picture the captain uploaded ("custom").

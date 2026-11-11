@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // seaEvents.js - surprises in the middle of a wave. A few seconds into some waves the sea
 // throws something at the captain:
 //   whirlpool       - drags ships towards its centre; raiders caught in it are torn apart

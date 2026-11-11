@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // api.js - every request from the browser to OUR server goes through this file.
 // The browser never talks to the Fish API directly; the server does that,
 // so the answers to a sonar puzzle never reach the browser.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // screens.js - every screen and the navigation between them.
 // Each screen has its own address (#/menu, #/leaderboard, ...), so the
 // browser's Back and Forward buttons work, and Escape returns to the menu.

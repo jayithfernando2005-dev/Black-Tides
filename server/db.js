@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // db.js - opens the game's own database and makes sure every table exists.
 // It is one file, blacktides.db, next to server.js. SQLite is built into Node.js.
 const { DatabaseSync } = require("node:sqlite");

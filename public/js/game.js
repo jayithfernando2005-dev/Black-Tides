@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // game.js - the battle itself: the game loop, the player's ship, waves,
 // bosses, storms, power-ups, pausing, and the end of the battle.
 // It talks to the screens only through events (battle:start, battle:over, ...).

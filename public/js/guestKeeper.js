@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // guestKeeper.js - guests keep their progress. A guest's gold, upgrades and campaign live in
 // the server session, which ends when the browser is closed. So after each battle, purchase
 // or loaded save, this file keeps a copy of the guest's signed save file in the browser.

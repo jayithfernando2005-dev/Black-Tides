@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // quests.js - daily quests. Each day three quests are picked from the list below (the same
 // three for every captain), and finishing one pays gold. Progress comes from what the server
 // already sees: saved battles, solved sonar puzzles, the Daily Challenge and campaign wins.

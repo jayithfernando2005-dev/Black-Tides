@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // brassSelect.js - the brass dropdowns in Settings (Difficulty and the weather city), in the
 // same style as the Steering keys wheel: a brass button that unrolls a parchment scroll.
 // The real value stays in the hidden <select> (screens.js reads it when settings are saved),

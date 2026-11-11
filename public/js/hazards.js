@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // hazards.js - tentacle slams. A ripple on the water warns where a tentacle will strike;
 // a moment later it crashes down, and a ship still inside the ring is hurt.
 // Used by the kraken boss and by the "tentacle attack" sea event.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // liveFeed.js - "Live sea news". The browser keeps one connection open to the server
 // (Server-Sent Events, GET /api/live). Whenever something happens to ANY captain, the
 // server pushes an event down that connection; this file turns it into an event on our

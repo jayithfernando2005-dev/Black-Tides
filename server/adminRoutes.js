@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // adminRoutes.js - the admin ("harbour master") page. Admins can see every captain, reset
 // a captain's progress, rename a captain with a bad name, or remove an account.
 // Other admins cannot be changed from here, and an admin cannot remove themselves.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // questRoutes.js - GET /api/quests (today's three quests) and POST /api/quests/:key/claim.
 const express = require("express");
 const requireLogin = require("./requireLogin");

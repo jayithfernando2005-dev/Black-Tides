@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // scores.js - saving battle results and reading records and the leaderboard.
 const db = require("./db");
 

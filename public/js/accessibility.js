@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // accessibility.js - turns the accessibility settings into classes on <body>, so the CSS
 // can change colours, text size and motion; the battle reads the same settings for its
 // canvas drawing (palette() below).

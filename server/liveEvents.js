@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // liveEvents.js - "Live sea news". When something worth telling happens anywhere on the
 // server (a new captain, a stage conquered, a record score, a Daily Challenge solved), the
 // route that saw it calls publish(). Every open game gets the news at once through

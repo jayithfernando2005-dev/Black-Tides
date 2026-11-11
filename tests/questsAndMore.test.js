@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // questsAndMore.test.js - daily quests, ship customisation, the weekly tournament and statistics.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");

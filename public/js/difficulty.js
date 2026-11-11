@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // difficulty.js - Easy, Normal and Hard in one place. Every number that changes with the
 // difficulty is here, so the rest of the game just asks for "the current difficulty".
 import { getSettings } from "./settings.js";

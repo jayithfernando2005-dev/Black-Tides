@@ -1,4 +1,3 @@
-// passwords.js - turns a password into a hash, and checks a password against a hash.
 // The real password is never stored anywhere.
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // mapScene.js - the living captain's cabin behind the Campaign Map (img/map-cabin.jpg).
 //   - outside the windows the storm goes on: the sea rolls, the clouds drift, rain runs down
 //     the glass and lightning flashes now and then

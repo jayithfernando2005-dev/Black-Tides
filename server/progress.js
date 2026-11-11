@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // progress.js - a captain's gold, ship upgrades and sonar record.
 // Logged-in captains keep theirs in the database.
 // Guests keep theirs in the session, so it is lost when they leave.

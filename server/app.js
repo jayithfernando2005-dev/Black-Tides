@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // app.js - builds the Black Tides web application (all the routes), without starting it.
 // server.js starts it on port 3000; the automated tests start it on a spare port.
 const express = require("express");

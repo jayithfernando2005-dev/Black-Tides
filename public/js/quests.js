@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // quests.js - the Daily quests panel on the Daily Challenge screen: three goals a day,
 // the same for every captain. The server tracks the progress (server/quests.js); this
 // file shows it and sends the "claim" when a quest is done.

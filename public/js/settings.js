@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // settings.js - the player's settings, kept in a cookie on this device.
 // This cookie is readable by our page scripts on purpose (it holds nothing secret).
 // The login cookie (connect.sid) is different: it is httpOnly, so scripts cannot read it.

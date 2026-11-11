@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // daily.test.js - the Daily Challenge.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");

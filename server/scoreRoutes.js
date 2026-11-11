@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // scoreRoutes.js - saving battle results, a captain's profile, achievements and the leaderboard.
 const express = require("express");
 const { publish } = require("./liveEvents");

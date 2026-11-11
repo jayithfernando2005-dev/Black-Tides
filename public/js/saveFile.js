@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // saveFile.js - Settings: download your progress as a save file, or load one back.
 // The server signs the file, so an edited file is refused (see server/saveRoutes.js).
 import * as api from "./api.js";

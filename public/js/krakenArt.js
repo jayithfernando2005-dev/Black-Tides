@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // krakenArt.js - draws the kraken boss: a huge body rising from the water, glowing eyes
 // and six waving tentacles. Drawn with canvas shapes (no picture file needed).
 import { drawTentacle } from "./hazards.js";

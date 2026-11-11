@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // make-admin.js - gives a captain the admin ("harbour master") role, or takes it away.
 //   npm run make-admin -- Jayith          (make Jayith an admin)
 //   npm run make-admin -- Jayith remove   (back to a normal captain)

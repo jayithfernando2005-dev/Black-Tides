@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // stats.js - the Statistics page: charts drawn as SVG by hand (no chart library).
 //   - score of each of the last 30 battles (line)
 //   - battles per day for the last 14 days (bars)

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // ranks.js - captain ranks. Everything a captain does earns XP (experience), and enough XP
 // raises their rank from Deckhand up to Admiral. XP is always worked out on the server
 // from saved records, so it cannot be faked.

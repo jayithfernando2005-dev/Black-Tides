@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // stageSounds.js - every stage sounds different. While a battle runs, this file plays the
 // sounds of the place now and then: gulls over the harbours, thunder in storms, creaking
 // timbers among the wrecks. It also reacts to battle events: the kraken roars, a whirlpool

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // adminPage.js - the harbour master (admin) page: every captain, with buttons to rename,
 // reset progress or remove an account. The server checks the admin role on every request;
 // this page only hides the buttons from everyone else.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shareCard.js - makes a picture (1200 x 630, the usual size for sharing links) of a victory
 // or a Daily Challenge result, with the captain's portrait, rank and score, and downloads it.
 // Everything is drawn on a canvas in the browser; nothing is uploaded anywhere.

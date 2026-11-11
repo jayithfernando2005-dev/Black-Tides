@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // renderer.js - draws the battle on the canvas. It only draws; it never
 // changes the game. Visual style based on the Black Tides prototype.
 import { drawKraken } from "./krakenArt.js";

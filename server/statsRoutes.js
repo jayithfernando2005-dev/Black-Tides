@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // statsRoutes.js - GET /api/stats: the numbers behind a captain's Statistics page
 // (scores over time, battles per day, favourite stages, difficulty and sonar accuracy).
 const express = require("express");

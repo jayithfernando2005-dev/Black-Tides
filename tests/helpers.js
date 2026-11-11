@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // helpers.js - shared set-up for the automated tests (run them with: npm test).
 // Each test file starts the real game server on a spare port, with:
 //   - a throwaway database in memory (the real blacktides.db is never touched),

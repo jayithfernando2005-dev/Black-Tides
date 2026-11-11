@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // users.js - saving and finding captain accounts in the database.
 const db = require("./db");
 

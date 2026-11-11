@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // captainRoutes.js - public captain pages and rivals.
 //   GET    /api/captains/:name    - anyone can see a captain's public record
 //   GET    /api/rivals            - my rivals, with their best score next to mine

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shots.js - cannonballs: ours (bone) and the raiders' (rust).
 const SHOT_SPEED = 540;           // pixels per second
 const ENEMY_SHOT_SPEED = 250;

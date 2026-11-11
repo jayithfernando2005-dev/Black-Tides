@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // weatherRoutes.js - GET /api/weather?city=colombo for the Endless Voyage.
 const express = require("express");
 const { getWeather, listCities, DEFAULT_CITY } = require("./weather");

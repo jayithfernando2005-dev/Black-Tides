@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // rankView.js - shows a captain's rank title and XP bar (the numbers come from the server).
 export function renderRank(container, rank) {
   container.replaceChildren();

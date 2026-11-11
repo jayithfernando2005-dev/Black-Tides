@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // campaign.js - the Naval Campaign Map. Shows the nine stages on the parchment map:
 // won stages get a green tick, the next stage is the "current target", later ones are
 // locked. The server (GET /api/campaign) says how far the captain has got; this file

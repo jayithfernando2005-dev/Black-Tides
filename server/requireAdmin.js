@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // requireAdmin.js - a guard for the admin page's routes. The role is read from the database
 // on every request (not from the session), so taking away admin rights works at once.
 const { isAdmin } = require("./users");

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // daily.js - the Daily Challenge. The first time anyone asks on a new day, the server
 // gets ONE puzzle from the Fish API and keeps it in the database. Every captain then
 // counts the same picture that day, and the fastest correct answers make "Today's" board.

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // saveRoutes.js - save files. A captain can download their progress (gold, ship upgrades,
 // campaign and sonar record) as a JSON file, and load it again later, for example after
 // moving the game to a new computer with a fresh database.

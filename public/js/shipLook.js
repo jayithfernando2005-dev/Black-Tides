@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // shipLook.js - your ship's name, sail colour and flag: the choices, how each flag is drawn,
 // and the look of the logged-in captain's ship (the battle reads it from here).
 import { on, emit } from "./events.js";

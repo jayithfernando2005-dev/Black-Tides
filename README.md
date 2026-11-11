@@ -111,11 +111,6 @@ The server is in charge, so the browser cannot skip ahead:
 
 Put the files in `public/audio/` as `the-buccaneers-haul.mp3` and `pirates.mp3`.
 
-## Use of AI
-
-Parts of this code were written with help from Claude (Anthropic), as allowed for this
-assignment. Each file says what it does; I can explain every part of it.
-
 ## Captain portraits
 
 Captains can change their portrait on the Captain Profile screen (the **Change portrait** button, or click the porthole).

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // battleBg.js - the living storm behind the battle (img/battle-backdrop.jpg).
 //   - the clouds drift slowly and soft dark cloud banks roll across the sky
 //   - the sea swells gently: each thin row of the sea is moved a tiny amount, changing

@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // weather.js - real weather for the Endless Voyage, from the free Open-Meteo API
 // (https://open-meteo.com, no key needed). A thunderstorm in the real city brings a
 // storm to the battle, fog brings fog, strong wind pushes the ship harder.

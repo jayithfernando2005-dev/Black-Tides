@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // puzzles.test.js - the sonar puzzles and the Naval Campaign rules.
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
