@@ -15,6 +15,9 @@ import "./stageSounds.js";
 import "./touch.js";
 import "./guestKeeper.js";
 import "./accessibility.js";
+import "./fullscreen.js";
+import "./battleBg.js";
+import "./brassSelect.js";
 import { loadMenuScene } from "./menuScene.js";
 
 await runSplash([loadMenuScene]);   // the loading screen first, like a real game
