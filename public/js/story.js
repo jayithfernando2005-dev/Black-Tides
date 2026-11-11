@@ -23,11 +23,11 @@ const STORIES = {
     finish: "Back to the harbour",
     next: "menu",
     panels: [
-      { image: "img/map-underwater.jpg", focus: "50% 80%", title: "The kraken falls",
+      { image: "img/story-kraken-falls.jpg", focus: "50% 55%", title: "The kraken falls",
         text: "With a last roar the kraken sinks into the deep, and the raider fleets scatter like gulls." },
-      { image: "img/menu.jpg", focus: "70% 40%", title: "Lanterns in the harbour",
+      { image: "img/story-harbour.jpg", focus: "50% 50%", title: "Lanterns in the harbour",
         text: "That night every lantern in the harbour is lit. The powder stores are full again. Ships come home." },
-      { image: "img/splash.jpg", focus: "50% 30%", title: "The tides are yours",
+      { image: "img/story-tides.jpg", focus: "50% 40%", title: "The tides are yours",
         text: "The Black Tides are calm at last. But the sea is wide, Captain, and the Endless voyage still calls." }
     ]
   }
