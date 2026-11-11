@@ -591,7 +591,7 @@ window.addEventListener("keydown", (event) => {
   if (current !== "game" || $("over-panel").hidden) return;
   if (event.key === "Enter" && document.activeElement.tagName !== "BUTTON") {
     playAgain();
-  } else if (event.key.toLowerCase() === "m") {
+  } else if (String(event.key || "").toLowerCase() === "m") {
     go("menu");
   }
 });
