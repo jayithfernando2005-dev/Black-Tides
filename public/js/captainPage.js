@@ -113,16 +113,114 @@ export async function showRivals() {
   }
 }
 
-$("rival-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const name = $("rival-name").value.trim();
-  if (!name) return;
+// ----- The rival picker: a brass dropdown of captains with a search box -----
+const picker = {
+  button: $("rival-choose"), scroll: $("rival-scroll"), search: $("rival-search"),
+  list: $("rival-options"), chosen: null, timer: null
+};
+
+function pickerItems() {
+  return [...picker.list.querySelectorAll("li[role=option]:not([aria-disabled=true])")];
+}
+
+async function loadCaptains() {
+  try {
+    const data = await api.searchCaptains(picker.search.value.trim());
+    picker.list.replaceChildren(...data.captains.map((c) => {
+      const item = make("li", "rival-option");
+      item.setAttribute("role", "option");
+      item.tabIndex = -1;
+      item.dataset.name = c.username;
+      const portrait = make("span", "portrait");
+      renderPortrait(portrait, c.username, c.avatar, c.avatarVersion);
+      const text = make("span", "brass-drop-text");
+      text.append(make("b", "", c.username), make("small", "", c.rank + " · best " + c.bestScore.toLocaleString("en-GB")));
+      item.append(portrait, text);
+      if (c.isMe || c.isRival) {
+        item.setAttribute("aria-disabled", "true");
+        item.append(make("span", "rival-tag", c.isMe ? "You" : "Rival"));
+      } else {
+        item.addEventListener("click", () => choose(c.username));
+      }
+      item.setAttribute("aria-selected", String(c.username === picker.chosen));
+      return item;
+    }));
+    $("rival-none").hidden = data.captains.length > 0;
+  } catch (error) {
+    $("rival-none").hidden = false;
+    $("rival-none").textContent = error.message;
+  }
+}
+
+function openPicker() {
+  picker.scroll.hidden = false;
+  picker.button.setAttribute("aria-expanded", "true");
+  loadCaptains();
+  picker.search.focus();
+}
+
+function closePicker(focusButton) {
+  if (picker.scroll.hidden) return;
+  picker.scroll.hidden = true;
+  picker.button.setAttribute("aria-expanded", "false");
+  if (focusButton) picker.button.focus();
+}
+
+function choose(name) {
+  picker.chosen = name;
+  $("rival-choice").textContent = name;
+  $("rival-add").disabled = false;
+  closePicker(false);
+  $("rival-add").focus();
+}
+
+picker.button.addEventListener("click", () => (picker.scroll.hidden ? openPicker() : closePicker(true)));
+// typing in the search box narrows the list (after a short pause)
+picker.search.addEventListener("input", () => {
+  clearTimeout(picker.timer);
+  picker.timer = setTimeout(loadCaptains, 200);
+});
+// Keyboard: arrows move through the captains, Enter or Space picks, Escape closes.
+picker.scroll.addEventListener("keydown", (event) => {
+  const items = pickerItems();
+  const index = items.indexOf(document.activeElement);
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    if (!items.length) return;
+    if (index === -1) { items[event.key === "ArrowDown" ? 0 : items.length - 1].focus(); return; }
+    const next = index + (event.key === "ArrowDown" ? 1 : -1);
+    if (next < 0) picker.search.focus();
+    else items[Math.min(next, items.length - 1)].focus();
+  } else if ((event.key === "Enter" || event.key === " ") && index !== -1) {
+    event.preventDefault();
+    choose(items[index].dataset.name);
+  } else if (event.key === "Enter" && items.length === 1) {
+    event.preventDefault();
+    choose(items[0].dataset.name);                 // Enter in the search box picks the only match
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    event.stopPropagation();
+    closePicker(true);
+  }
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!$("rival-picker").contains(event.target)) closePicker(false);
+});
+
+// Event: "Add rival".
+$("rival-add").addEventListener("click", async () => {
+  if (!picker.chosen) return;
+  const name = picker.chosen;
+  $("rival-add").disabled = true;
   try {
     await api.addRival(name);
-    $("rival-name").value = "";
     $("rival-message").textContent = name + " added as a rival.";
+    picker.chosen = null;
+    $("rival-choice").textContent = "Choose a captain";
+    picker.search.value = "";
     showRivals();
   } catch (error) {
     $("rival-message").textContent = error.message;
+    $("rival-add").disabled = false;
   }
 });

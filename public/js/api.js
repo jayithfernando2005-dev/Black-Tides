@@ -237,3 +237,8 @@ export function getTournament() {
 export function getStats() {
   return getJson("/api/stats");
 }
+
+// Captains to choose a rival from: { captains: [{ username, rank, bestScore, isMe, isRival, ... }] }
+export function searchCaptains(text) {
+  return getJson("/api/captains?search=" + encodeURIComponent(text || ""));
+}

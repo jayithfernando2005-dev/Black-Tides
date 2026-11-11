@@ -29,6 +29,30 @@ function bestDaily(userId) {
   return { best: row.best, finished: row.count };
 }
 
+// GET /api/captains?search=an - up to 20 captains to choose from (for the rival picker),
+// best scores first. Only public facts. The search text is matched literally.
+router.get("/captains", (req, res) => {
+  const search = String(req.query.search || "").trim().slice(0, 20);
+  const pattern = "%" + search.replace(/[\\%_]/g, (c) => "\\" + c) + "%";
+  const rows = db.prepare(`
+    SELECT users.id AS id, users.username AS username, users.avatar AS avatar, users.avatar_updated AS avatarVersion,
+           COALESCE(MAX(scores.score), 0) AS bestScore
+    FROM users LEFT JOIN scores ON scores.user_id = users.id
+    WHERE users.username LIKE ? ESCAPE '\\'
+    GROUP BY users.id
+    ORDER BY bestScore DESC, users.username COLLATE NOCASE
+    LIMIT 20
+  `).all(pattern);
+  const me = req.session.userId || null;
+  const mine = me ? new Set(db.prepare("SELECT rival_id FROM rivals WHERE user_id = ?").all(me).map((r) => r.rival_id)) : new Set();
+  res.json({
+    captains: rows.map((row) => ({
+      username: row.username, avatar: row.avatar, avatarVersion: row.avatarVersion, bestScore: row.bestScore,
+      rank: rankOf(row.id).title, isMe: row.id === me, isRival: mine.has(row.id)
+    }))
+  });
+});
+
 // GET /api/captains/:name - a captain's public page.
 router.get("/captains/:name", (req, res) => {
   settleLastWeek();

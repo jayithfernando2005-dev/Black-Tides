@@ -86,3 +86,19 @@ test("the leaderboard shows each captain's rank title", async () => {
   assert.equal(typeof board.body[0].title, "string");
   assert.equal(board.body[0].userId, undefined);
 });
+
+test("the rival picker can search captains, marking yourself and your rivals", async () => {
+  const me = await captainWithScore(100);
+  const other = await captainWithScore(900);
+  await me.captain.post("/api/rivals", { username: other.name });
+  const found = (await me.captain.get("/api/captains?search=" + other.name)).body.captains;
+  assert.equal(found.length, 1);
+  assert.equal(found[0].username, other.name);
+  assert.equal(found[0].isRival, true);
+  const self = (await me.captain.get("/api/captains?search=" + me.name)).body.captains[0];
+  assert.equal(self.isMe, true);
+  // % and _ are searched as plain characters, not wildcards
+  assert.equal((await me.captain.get("/api/captains?search=%25%25%25")).body.captains.length, 0);
+  assert.ok((await me.captain.get("/api/captains")).body.captains.length <= 20);
+  assert.equal(found[0].password_hash, undefined);
+});
