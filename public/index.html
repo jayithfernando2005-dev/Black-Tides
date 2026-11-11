@@ -37,6 +37,7 @@
   <canvas class="scene-bg" id="menu-bg" aria-hidden="true"></canvas>
   <!-- Living underwater scene behind the Campaign Map (js/mapScene.js). -->
   <canvas class="scene-bg" id="map-bg" aria-hidden="true"></canvas>
+  <canvas class="scene-bg" id="battle-bg" aria-hidden="true"></canvas>
 
   <!-- The header shown on every screen except the menu, log in and the battle. -->
   <header class="brand" id="brand">
@@ -151,7 +152,7 @@
         <button type="button" class="pill pill-small" id="menu-logout"><span class="pill-face">Log out</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
         <button type="button" class="pill pill-small" id="menu-login" hidden><span class="pill-face">Log in</span><i class="gem gem-top"></i><i class="gem gem-bottom"></i></button>
         </div>
-        <p class="menu-note" id="menu-guest-note" hidden>Playing as a guest: gold and upgrades last until you close the browser, and scores are not saved.</p>
+        <p class="menu-note" id="menu-guest-note" hidden>Playing as a guest: your gold and upgrades are kept on this browser, but scores are not saved. Create an account and your progress comes with you.</p>
       </nav>
     </section>
 
@@ -244,6 +245,7 @@
               <dt><kbd class="keycap wide">Mouse</kbd></dt><dd>Aim. Hold the left button to fire</dd>
               <dt><kbd class="keycap">R</kbd></dt><dd>Open the sonar to reload</dd>
               <dt><kbd class="keycap">P</kbd><kbd class="keycap wide">Esc</kbd></dt><dd>Pause. Esc also closes the sonar</dd>
+              <dt><kbd class="keycap">F</kbd></dt><dd>Full screen on or off (or the round button in the bottom-left corner)</dd>
               <dt><kbd class="keycap wide">Enter</kbd><kbd class="keycap">M</kbd></dt><dd>After a battle: play again, or menu</dd>
             </dl>
           </section>
@@ -314,7 +316,7 @@
 
         <!-- Your ship's name, sail colour and flag (js/shipCustomise.js) -->
         <details class="ship-custom" id="ship-custom" open>
-          <summary><span class="ship-custom-title">Your ship's colours</span><span class="ship-custom-hint" id="ship-custom-hint">Name your ship, dye the sails, choose a flag</span></summary>
+          <summary><span class="ship-custom-title">Your ship's colours</span><span class="ship-custom-hint" id="ship-custom-hint">Name your ship, dye the sails, choose a flag</span><span class="ship-custom-toggle" aria-hidden="true"></span></summary>
           <div class="ship-custom-body">
             <canvas class="ship-preview" id="ship-preview" width="300" height="190" aria-label="Preview of your ship"></canvas>
             <form class="ship-form" id="ship-form">
@@ -584,11 +586,19 @@
             <div class="medal-panel rivals-panel">
               <div class="medal-head"><h3>Rivals</h3><span id="rivals-count"></span></div>
               <ul class="rivals-list" id="rivals-list"></ul>
-              <p class="rivals-empty" id="rivals-empty">No rivals yet. Open a captain from the leaderboard and press "Mark as rival", or type a name here.</p>
-              <form class="rival-form" id="rival-form">
-                <input id="rival-name" maxlength="20" placeholder="Captain's name" aria-label="Captain's name" autocomplete="off">
-                <button type="submit" class="plaque-button header-plaque">Add rival</button>
-              </form>
+              <p class="rivals-empty" id="rivals-empty">No rivals yet. Choose a captain below, or open one from the leaderboard and press "Mark as rival".</p>
+              <!-- Choose a captain from a brass dropdown (like Steering keys), then Add rival (js/captainPage.js) -->
+              <div class="rival-form" id="rival-form">
+                <div class="brass-drop rival-picker" id="rival-picker">
+                  <button type="button" class="helm-button brass-drop-button" id="rival-choose" aria-haspopup="listbox" aria-expanded="false"><span id="rival-choice">Choose a captain</span><i></i></button>
+                  <div class="helm-scroll brass-drop-list rival-scroll" id="rival-scroll" hidden>
+                    <input id="rival-search" maxlength="20" placeholder="Search captains..." aria-label="Search captains" autocomplete="off">
+                    <ul class="rival-options" id="rival-options" role="listbox" aria-label="Captains"></ul>
+                    <p class="rival-none" id="rival-none" hidden>No captains found.</p>
+                  </div>
+                </div>
+                <button type="button" class="plaque-button header-plaque" id="rival-add" disabled>Add rival</button>
+              </div>
               <p class="rival-message" id="rival-message" role="status"></p>
             </div>
           </div>
@@ -684,16 +694,24 @@
 
           <fieldset class="plank-panel play-panel">
             <legend class="ribbon-label">Play</legend>
-            <div class="plank-row"><label for="set-difficulty">Difficulty<small class="row-note">Hard: tougher raiders, x1.3 points, more gold</small></label>
-              <select id="set-difficulty" class="brass-select"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select>
+            <div class="plank-row"><label for="set-difficulty">Difficulty</label>
+              <select id="set-difficulty" class="brass-select">
+                <option value="easy" data-note="Gentler raiders · x0.75 points">Easy</option>
+                <option value="normal" data-note="The usual sea">Normal</option>
+                <option value="hard" data-note="Tougher raiders · x1.3 points, more gold">Hard</option>
+              </select>
             </div>
             <div class="plank-row"><label for="set-shake">Screen shake when hit</label><input class="iron-check" id="set-shake" type="checkbox"></div>
             <div class="plank-row"><label for="set-news">Live sea news pop-ups</label><input class="iron-check" id="set-news" type="checkbox"></div>
             <div class="plank-row"><label for="set-weather">Real weather for the Endless voyage</label>
               <select id="set-weather" class="brass-select">
-                <option value="colombo">Colombo</option><option value="kandy">Kandy</option><option value="galle">Galle</option>
-                <option value="jaffna">Jaffna</option><option value="trincomalee">Trincomalee</option>
-                <option value="luton">Luton (Bedfordshire)</option><option value="london">London</option>
+                <option value="colombo" data-note="Sri Lanka">Colombo</option>
+                <option value="kandy" data-note="Sri Lanka">Kandy</option>
+                <option value="galle" data-note="Sri Lanka">Galle</option>
+                <option value="jaffna" data-note="Sri Lanka">Jaffna</option>
+                <option value="trincomalee" data-note="Sri Lanka">Trincomalee</option>
+                <option value="luton" data-note="England · University of Bedfordshire">Luton</option>
+                <option value="london" data-note="England">London</option>
               </select>
             </div>
             <div class="plank-row keys-row">
@@ -868,6 +886,12 @@
 
   <!-- Live sea news pop-ups (js/liveFeed.js) -->
   <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- Full screen on / off (js/fullscreen.js). Hidden if the browser cannot do it. -->
+  <button type="button" class="fullscreen-button" id="fullscreen-button" hidden aria-pressed="false" aria-label="Full screen (F)" title="Full screen (F)">
+    <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+  </button>
 
   <script type="module" src="js/main.js"></script>
 </body>

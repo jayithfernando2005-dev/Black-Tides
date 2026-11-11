@@ -1521,8 +1521,20 @@ body[data-screen="game"] .toasts { bottom: auto; top: 84px; }
 .rival-diff.level { color: #2a1d08; background: #f3d48a; }
 .rivals-empty { margin: 8px 0 0; font-size: 0.88rem; color: #d9c8a4; }
 .rivals-list:not(:empty) + .rivals-empty { display: none; }
-.rival-form { display: flex; gap: 10px; margin-top: 10px; }
-.rival-form input { flex: 1; min-width: 0; }
+.rival-form { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+.rival-picker { flex: 1; min-width: 220px; }
+.rival-picker .brass-drop-button { width: 100%; }
+.rival-scroll { left: 0; right: auto; width: 100%; min-width: 280px; max-height: 340px; display: block; overflow-y: auto; }
+.rival-scroll input { width: 100%; margin-bottom: 8px; min-height: 36px; color: #2e1c08; background: rgba(255,255,255,0.55); border: 1px solid #8a6a3a; }
+.rival-scroll input::placeholder { color: #7a5a30; }
+.rival-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.rival-option { display: grid !important; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.rival-option .portrait { width: 36px; height: 36px; }
+.rival-option[aria-disabled="true"] { cursor: default; opacity: 0.55; }
+.rival-option[aria-disabled="true"]:hover { background: none; }
+.rival-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b3a0c; }
+.rival-none { margin: 4px 2px; font-size: 0.85rem; color: #6b5030; }
+#rival-add:disabled { opacity: 0.55; cursor: default; }
 .rival-form .plaque-button { white-space: nowrap; }
 .rival-message { min-height: 1.2em; margin: 6px 0 0; font-size: 0.88rem; color: #bff0c8; }
 /* the profile's two plaques hang on the bottom edge of the frame, like the Settings buttons */
@@ -1563,8 +1575,12 @@ body[data-screen="game"] .toasts { bottom: auto; top: 84px; }
 .ship-custom { margin: 0 0 14px; border-radius: 6px; background: linear-gradient(180deg, rgba(70,52,36,0.92), rgba(44,33,24,0.92)); box-shadow: inset 0 0 0 2px #1d1610, inset 0 0 0 4px rgba(184,148,78,0.5); }
 .ship-custom summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 12px 18px; cursor: pointer; list-style: none; }
 .ship-custom summary::-webkit-details-marker { display: none; }
-.ship-custom summary::before { content: "▸"; color: #f3d48a; transition: transform 0.2s; }
-.ship-custom[open] summary::before { transform: rotate(90deg); }
+.ship-custom summary { align-items: center; }
+.ship-custom summary:hover .ship-custom-toggle { background: #f3d48a; color: #2a1d0c; }
+/* a clear Show / Hide button on the right of the bar */
+.ship-custom-toggle { margin-left: auto; padding: 4px 14px; border-radius: 999px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 0.85rem; color: #f3d48a; box-shadow: inset 0 0 0 1.5px #b8944e; transition: background 0.2s, color 0.2s; }
+.ship-custom-toggle::after { content: "Show ▾"; }
+.ship-custom[open] .ship-custom-toggle::after { content: "Hide ▴"; }
 .ship-custom-title { font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; color: #f3d48a; }
 .ship-custom-hint { font-size: 0.88rem; color: #d9c8a4; }
 .ship-custom-body { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; padding: 0 18px 16px; align-items: start; }
@@ -1615,9 +1631,12 @@ body[data-screen="game"] .toasts { bottom: auto; top: 84px; }
 .story-screen { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-rows: minmax(0, 1fr) auto; background: #05080b; }
 .story-screen[hidden] { display: none; }
 body[data-screen="story"] .brand, body[data-screen="story"] .toasts { display: none; }
-.story-picture { background-size: cover; background-repeat: no-repeat; overflow: hidden; box-shadow: inset 0 -80px 80px -20px #05080b, inset 0 0 120px rgba(0,0,0,0.7); }
-.story-picture.zoom { animation: story-zoom 9s ease-out both; }
-@keyframes story-zoom { from { background-size: 112% auto; filter: brightness(0.55); } 15% { filter: brightness(1); } to { background-size: 128% auto; } }
+/* the painting fills the area (cover) and zooms in slowly; the shade on top blends it into the caption */
+.story-picture { position: relative; overflow: hidden; }
+.story-picture::before { content: ""; position: absolute; inset: 0; background-image: var(--story-image); background-position: var(--story-focus, center); background-size: cover; background-repeat: no-repeat; transform-origin: var(--story-focus, center); }
+.story-picture::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 -80px 80px -20px #05080b, inset 0 0 120px rgba(0,0,0,0.6); pointer-events: none; }
+.story-picture.zoom::before { animation: story-zoom 9s ease-out both; }
+@keyframes story-zoom { from { transform: scale(1); filter: brightness(0.55); } 15% { filter: brightness(1); } to { transform: scale(1.08); } }
 .story-caption { padding: 20px max(16px, 8vw) 26px; background: linear-gradient(180deg, rgba(5,8,11,0.9), #05080b); border-top: 2px solid #b8944e; }
 .story-caption h2 { margin: 0 0 8px; font-family: "Cinzel", Georgia, serif; font-weight: 900; font-size: clamp(1.4rem, 3vw, 2.2rem); color: #f3d48a; text-shadow: 0 2px 0 #1a120c; }
 .story-caption p { min-height: 3.2em; margin: 0 0 14px; max-width: 900px; font-family: Georgia, serif; font-size: clamp(1.05rem, 1.8vw, 1.35rem); line-height: 1.5; color: #f3e6c8; }
@@ -1627,7 +1646,7 @@ body[data-screen="story"] .brand, body[data-screen="story"] .toasts { display: n
 .story-dots { display: flex; gap: 8px; }
 .story-dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(243,212,138,0.3); }
 .story-dots i.on { background: #f3d48a; box-shadow: 0 0 8px #f3d48a; }
-@media (prefers-reduced-motion: reduce) { .story-picture.zoom { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .story-picture.zoom::before { animation: none; } }
 
 /* touch controls: over the sea in landscape, below it on a phone held upright */
 .touch-controls { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
@@ -1711,3 +1730,33 @@ body.a11y-contrast .hud { background: #000 !important; box-shadow: 0 0 0 2px #ff
 body.a11y-contrast .hud .label, body.a11y-contrast .hud b, body.a11y-contrast .hud .num { color: #fff !important; text-shadow: none !important; }
 body.a11y-contrast .toast { background: #000; box-shadow: inset 0 0 0 2px #fff; }
 body.a11y-contrast .sonar-button .lever-label { background: #000; color: #fff; }
+
+/* full-screen button: a small brass porthole in the bottom-left corner */
+.fullscreen-button { position: fixed; left: 14px; bottom: 14px; z-index: 55; width: 44px; height: 44px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 0; cursor: pointer;
+  color: #2a1d0c; background: radial-gradient(circle at 35% 30%, #fff1c2, #d9a84a 55%, #7a4f14); box-shadow: 0 0 0 2px #3b2508, 0 4px 12px rgba(0,0,0,0.6); opacity: 0.75; transition: opacity 0.2s, transform 0.2s; }
+.fullscreen-button[hidden] { display: none; }
+.fullscreen-button:hover:not(:disabled), .fullscreen-button:focus-visible { opacity: 1; transform: scale(1.08); border: 0; }
+.fullscreen-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.fullscreen-button .icon-exit, .fullscreen-button.is-full .icon-enter { display: none; }
+.fullscreen-button.is-full .icon-exit { display: block; }
+/* not on the loading screen; out of the way of the touch joystick on phones */
+body:not([data-screen]) .fullscreen-button, body[data-screen="story"] .fullscreen-button { display: none; }
+body.touch-play[data-screen="game"] .fullscreen-button { left: auto; right: 14px; top: 14px; bottom: auto; }
+
+/* brass dropdowns in Settings (Difficulty, weather city): the same look as the Steering keys wheel */
+.brass-drop { position: relative; flex: none; }
+.brass-drop-button { min-width: 190px; justify-content: space-between; }
+.brass-drop-list { top: calc(100% + 12px); left: auto; right: 0; transform: none; width: max(100%, 250px); max-height: 320px; overflow-y: auto; }
+.brass-drop-list li { padding: 7px 10px; }
+.brass-drop-text { display: grid; gap: 1px; }
+.brass-drop-text b { font-weight: 700; }
+.brass-drop-text small { font-family: var(--body, inherit); font-weight: 400; font-size: 0.72rem; letter-spacing: 0; text-transform: none; color: #6b5030; }
+.plank-row label[id] { cursor: pointer; }
+/* the Load button in the save-file row looked faded: give it the same colours as Download */
+.save-buttons .plaque-button { color: #f1e2bd !important; opacity: 1 !important; }
+
+/* rival picker: fill the row, open upwards (it is at the bottom of the board), roomier rows */
+.rival-form .rival-picker { flex: 1 1 260px; min-width: 220px; }
+.rival-form .rival-picker .brass-drop-button { width: 100%; }
+.rival-form .rival-scroll { top: auto; bottom: calc(100% + 12px); left: 0; right: auto; width: 100%; animation: none; }
+.rival-scroll .rival-option { gap: 12px; padding: 6px 8px; }
