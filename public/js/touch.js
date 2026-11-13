@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // touch.js - on-screen controls for phones and tablets. A joystick on the left steers the
 // ship, a finger on the sea aims and fires (input.js), and buttons change the shot type and
 // pause. The controls only appear on touch screens.
@@ -21,6 +22,13 @@ function show() {
   document.body.classList.add("touch-play");
 }
 
+// Back to keyboard and mouse: the buttons go away and the brass radar comes back.
+function hide() {
+  controls.hidden = true;
+  document.body.classList.remove("touch-play");
+  release();
+}
+
 // On an upright phone the controls sit under the sea (outside the battle area, so the sonar
 // lever stays on the sea); otherwise they float over the sea.
 const stage = controls.parentElement;
@@ -35,8 +43,23 @@ place();
 upright.addEventListener("change", place);
 
 if (isTouchScreen()) show();
-// A touch on a laptop with a touch screen also turns them on.
-window.addEventListener("touchstart", show, { once: true, passive: true });
+
+// Laptops with a touch screen: the controls follow whatever the player is really using.
+// A finger on the screen turns them on; moving the mouse or pressing a key turns them off,
+// so one accidental touch no longer leaves the Shot button and joystick on screen.
+window.addEventListener("pointerdown", (event) => {
+  if (event.pointerType === "touch") show();
+}, { passive: true });
+let mouseTravel = 0;
+window.addEventListener("pointermove", (event) => {
+  if (event.pointerType !== "mouse" || isTouchScreen() || controls.hidden) return;
+  mouseTravel += Math.abs(event.movementX || 0) + Math.abs(event.movementY || 0);
+  if (mouseTravel > 40) { mouseTravel = 0; hide(); }   // a real mouse move, not a tiny jiggle
+});
+window.addEventListener("keydown", (event) => {
+  // event.isTrusted is false for the pretend "P" key sent by the touch pause button
+  if (event.isTrusted && !isTouchScreen() && !controls.hidden) hide();
+});
 
 let activePointer = null;
 let centre = { x: 0, y: 0 };
