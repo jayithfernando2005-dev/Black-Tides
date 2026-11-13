@@ -1,3 +1,4 @@
+/* AI note: written with help from Claude (Anthropic), as allowed for this assignment. */
 /* Black Tides - styles. Colours and type follow the prototype:
    night water, bone for the player, rust for raiders, brass for gold, green for the sonar. */
 :root {
@@ -1094,6 +1095,14 @@ body[data-screen="leaderboard"] .wrap { max-width: 1240px; padding: 0 clamp(12px
 /* ----- Battle: painted sea, riveted iron instruments and a brass lever ----- */
 body[data-screen="game"] { background: #05090c; }
 body[data-screen="game"] .wrap { max-width: 1320px; padding-top: 10px; }
+/* Keep the battle balanced in the middle of the screen. In a normal browser window it
+   already fills the height; in full screen the window is taller, so the spare space is
+   shared equally above and below instead of all collecting at the bottom. */
+body[data-screen="game"] .wrap {
+  min-height: 100vh; min-height: 100dvh; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-top: 10px; padding-bottom: 10px;
+}
 #screen-game .hud {
   position: relative; gap: 6px 0; padding: 10px 22px; border-radius: 8px; border: 0;
   background: linear-gradient(180deg, #4d4842 0%, #35312d 55%, #2a2724 100%);
