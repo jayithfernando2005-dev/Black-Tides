@@ -8,7 +8,7 @@ const STORIES = {
     finish: "Set sail",
     next: "game",                     // where "Set sail" goes
     panels: [
-      { image: "img/splash.jpg", focus: "60% 40%", title: "The Black Tides",
+      { image: "img/splash.jpg", focus: "50% 0%", title: "The Black Tides",
         text: "For a hundred years the raider fleets have ruled these waters. Ports burn. Ships vanish in the night." },
       { image: "img/menu.jpg", focus: "30% 60%", title: "The last free harbour",
         text: "One harbour still stands. Its cannons are silent: the powder stores are almost empty." },
