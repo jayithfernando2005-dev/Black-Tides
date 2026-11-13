@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // helpers.js - shared set-up for the automated tests (run them with: npm test).
 // Each test file starts the real game server on a spare port, with:
 //   - a throwaway database in memory (the real blacktides.db is never touched),
@@ -29,6 +30,7 @@ async function startGame() {
 
   // These must be set before the game's files are loaded.
   process.env.BLACKTIDES_DB = ":memory:";
+  process.env.LOG_REQUESTS = "0";                 // keep the test output clean
   process.env.FISH_API_URL = "http://127.0.0.1:" + pretendPort + "/fish";
   process.env.WEATHER_API_URL = "http://127.0.0.1:" + pretendPort + "/weather";
 

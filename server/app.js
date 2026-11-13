@@ -1,3 +1,4 @@
+// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // app.js - builds the Black Tides web application (all the routes), without starting it.
 // server.js starts it on port 3000; the automated tests start it on a spare port.
 const express = require("express");
@@ -18,6 +19,8 @@ const questRoutes = require("./questRoutes");
 const shipRoutes = require("./shipRoutes").router;
 const statsRoutes = require("./statsRoutes");
 
+const requestLog = require("./requestLog");
+
 const app = express();
 
 // Read JSON that the browser sends to us.
@@ -35,6 +38,12 @@ app.use(session({
     sameSite: "lax"                    // other websites cannot send it for us
   }
 }));
+
+// Print one line in the terminal for every API request (switch off with LOG_REQUESTS=0).
+// It comes after the session, so it can show which captain made the request.
+if (process.env.LOG_REQUESTS !== "0") {
+  app.use(requestLog);
+}
 
 // Send any file inside the "public" folder to the browser.
 app.use(express.static("public"));
