@@ -1,4 +1,3 @@
-// AI note: written with help from Claude (Anthropic), as allowed for this assignment.
 // requestLog.js - prints one line in the terminal for every request to our API, e.g.
 //   21:50:12  POST /api/puzzle/answer   200   14 ms   Jayith
 // It only READS the request after it is answered, so it never changes what the game does.
